@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cah Stop Cap</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin:0; font-family:Arial, sans-serif; }
+    header { background:#111; color:#fff; padding:20px; text-align:center; }
+    header img { height:60px; vertical-align:middle; }
+    nav { margin-top:10px; }
+    nav a { color:#fff; margin:0 15px; text-decoration:none; font-weight:bold; }
+    marquee { background:#eee; padding:10px; font-size:24px; font-weight:bold; }
+
+    /* Gallery */
+    .gallery { position:relative; width:100%; max-width:900px; margin:40px auto; overflow:hidden; }
+    .slides { display:flex; width:400%; animation: slide 12s infinite; }
+    .slides img { width:100%; flex-shrink:0; }
+    @keyframes slide {
+      0% { transform:translateX(0); }
+      25% { transform:translateX(-100%); }
+      50% { transform:translateX(-200%); }
+      75% { transform:translateX(-300%); }
+      100% { transform:translateX(0); }
+    }
+
+    /* Showroom */
+    .showroom { text-align:center; padding:40px; }
+    .showroom h2 { margin-bottom:20px; }
+    .showroom .items { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; }
+    .showroom .items img { width:200px; height:auto; border:1px solid #ccc; }
+    .showroom button { margin-top:20px; padding:10px 20px; }
+
+    /* About Us */
+    .about { display:flex; flex-wrap:wrap; padding:40px; background:#f9f9f9; }
+    .about img { flex:1; max-width:400px; margin-right:20px; }
+    .about .text { flex:2; }
+    .about h2 { margin-top:0; }
+
+    /* Footer */
+    footer { background:#111; color:#fff; padding:20px; display:flex; justify-content:space-around; flex-wrap:wrap; }
+    footer div { margin:10px; }
+    footer a { color:#fff; text-decoration:none; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <img src="static\CAH STOP CAP HD png .png" alt="Cah Stop Cap Logo">
+    <nav>
+      <a href="#shop">Shop</a>
+      <a href="#creative">CreativeLabs</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <!-- Marquee -->
+  <marquee>YDYS YDYS YDYS YDYS YDYS</marquee>
+
+  <!-- Gallery -->
+  <section class="gallery">
+    <div class="slides">
+      <img src="hat1.jpg" alt="Hat 1">
+      <img src="hat2.jpg" alt="Hat 2">
+      <img src="hat3.jpg" alt="Hat 3">
+      <img src="hat4.jpg" alt="Hat 4">
+    </div>
+  </section>
+
+  <!-- Showroom -->
+  <section class="showroom" id="shop">
+    <h2>SHOWROOM</h2>
+    <div class="items">
+      <img src="hat5.jpg" alt="Hat 5">
+      <img src="hat6.jpg" alt="Hat 6">
+      <img src="hat7.jpg" alt="Hat 7">
+      <img src="hat8.jpg" alt="Hat 8">
+    </div>
+    <button>VIEW MORE</button>
+  </section>
+
+  <!-- About Us -->
+  <section class="about" id="about">
+    <img src="about.jpg" alt="About Us Image">
+    <div class="text">
+      <h2>ABOUT US</h2>
+      <p>Hat Retailer based in Kingston, Jamaica; embracing the love for hat culture in our tropical country. Our goal is to provide an outlet for dreamers to define their swag through headwear.</p>
+      <button>READ MORE</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <div>
+      <h3>Find Us</h3>
+      <p>Based in Kingston<br>Operating on the campuses of UWI and UTECH</p>
+    </div>
+    <div>
+      <h3>Contact</h3>
+      <p>Email: <a href="mailto:cahstopcap@gmail.com">cahstopcap@gmail.com</a></p>
+      <p><a href="https://instagram.com">Instagram</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
