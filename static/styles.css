@@ -1,0 +1,457 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Blaka+Hollow&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Press+Start+2P&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&family=Rock+3D&display=swap');
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* prevents sideways scrolling */
+}
+
+body {
+margin: 0;
+font-family: sans-serif;
+background: #fff;
+color: #333;
+}
+
+.ydys-background {
+  margin: 0;
+  font-family: sans-serif;
+  background-image: url('assets/YDYS background.png'); 
+  background-size: cover; /* fills the screen */ 
+  background-position: center; /* centers the image */ 
+  background-repeat: repeat; /* prevents tiling */
+}
+
+.index {
+  background-color: black;
+}
+
+.home-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 50px;   /* adjust size */
+  height: auto;
+  margin-right: 55px;
+}
+
+.home-button img {
+  width: 100%;
+  height: auto;
+}
+
+header {
+background-image: url('assets/cahstopcap grafitti wall.png');
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+text-align: center;
+padding: 0 1rem 0 1rem;
+padding-bottom: 0%;
+height: 450px;
+position: relative;
+display: flex;
+flex-direction: column; 
+justify-content: flex-end; 
+}
+
+@media (max-width: 768px) { 
+  header { 
+    height: 350px; /* shrink height for mobile */  
+  } 
+}
+
+nav a {
+text-decoration: none;
+color:white;
+font-weight: bold;
+}
+
+/* Default: show text, hide icons */
+.header-text {
+  font-size: 30px;
+  display: flex;
+  font-family: 'Quantico';
+  font-size: 40px;
+}
+.header-icon {
+  display: none;
+}
+
+/* Default desktop view (words or icons) */
+.header-nav {
+  display: flex;
+  justify-content: center;   /* centers across the header */
+  gap: 8rem;                 /* spacing between items */
+}
+
+/* Mobile view: ensure icons stay horizontal */
+@media (max-width: 834px) {
+  /* Hide text on mobile */
+  .header-text {
+    display: none;
+  }
+
+  /* Show icons on mobile */
+  .header-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Make nav horizontal with icons */
+  .header-nav {
+    display: flex;
+    flex-direction: row;       /* force horizontal */
+    justify-content: space-around; /* spread evenly */
+    align-items: center;
+    gap: 2rem;                 /* smaller gap for mobile */
+  }
+
+  .header-icon img {
+    width: 40px;               /* adjust icon size */
+    height: auto;
+  }
+}
+
+.carousel {
+  position: relative;
+  width: 100%;
+  max-width: 1500px;
+  margin: auto;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+  flex: 0 0 100%; /* default: 1 image per view (phone) */
+  position: relative;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+/* Caption box */
+.caption {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(139, 0, 0, 0.5); /* 50% opacity */
+  color: #fff;
+  padding: 15px;
+  border-radius: 6px;
+  max-width: 70%;
+}
+
+.caption h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+}
+
+.caption button {
+  background: #fff;
+  color: darkred;
+  border: none;
+  padding: 8px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* Dots */
+.carousel-dots {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.dot {
+  height: 12px;
+  width: 12px;
+  margin: 0 5px;
+  background-color: darkgray;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.dot.active {
+  background-color: darkred;
+  box-shadow: 0 0 5px #ff6666;
+}
+
+/* Tablet: show 2 images */
+@media (min-width: 600px) {
+  .carousel-slide {
+    flex: 0 0 50%;
+  }
+}
+
+/* Laptop/Desktop: show 3 images */
+@media (min-width: 1024px) {
+  .carousel-track { 
+    gap: 20px; /* space between slides */ 
+  }
+  .carousel-slide {
+    flex: 0 0 calc(33.333% - 20px);
+  }
+}
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(139,0,0,0.8);
+  color: #fff;
+  border: none;
+  font-size: 2rem;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.carousel-btn.prev {
+  left: 10px;
+}
+
+.carousel-btn.next {
+  right: 10px;
+}
+
+.carousel-btn:hover {
+  background: rgba(200,0,0,0.9);
+}
+
+.marquee {
+  background-color: black;
+  width: 100%;
+  height: 50px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  position: relative;
+  animation-delay: 0s; /* start immediately */ 
+  animation-play-state: running; /* ensure it runs on load */
+}
+
+.marquee span {
+    display: inline-block;
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Press Start 2P';
+    color: white;
+    padding: 10px;
+    animation: scroll 20s linear infinite;
+    word-spacing: 50px;
+    text-shadow: 10px 5px 5px black;
+}
+
+/* Animation */ 
+@keyframes scroll { 
+  from { transform: translateX(100%); } 
+  to { transform: translateX(-100%); }
+ }
+
+.marquee span::after { 
+  content: attr(data-text); /* reuse the same text */ 
+  padding-left: 30px; /* spacing between repeats */ 
+}
+/* Animation */ 
+@keyframes scroll { 
+  from { transform: translateX(100%); } 
+  to { transform: translateX(-100%); }
+ }
+
+/* SHOWROOM */
+
+.showroom-header {
+  font-family: 'Quantico';
+  font-size: 4rem;
+  color: rgb(119, 30, 30);
+  margin: 20px 0 0 0;
+  display: flex;
+  justify-content: center;
+}
+
+.showroom, .about {
+text-align: center;
+padding: 2rem;
+}
+
+.hat-grid {
+display: flex;
+justify-content: center;
+gap: 1rem;
+flex-wrap: wrap;
+margin: 0;
+}
+
+.hat-grid img {
+width: 150px;
+height: auto;
+}
+
+.button {
+display: inline-block;
+padding: 0.5rem 1rem;
+background: #333;
+color: #fff;
+text-decoration: none;
+border-radius: 5px;
+}
+
+footer {
+background: black;
+padding: 2rem;
+text-align: center;
+}
+
+.footer-info {
+display: flex;
+justify-content: space-around;
+flex-wrap: wrap;
+}
+
+.credit {
+margin-top: 1rem;
+font-size: 0.8rem;
+}
+
+/* ABOUT SECTION  */
+.about-section {
+  width: 100%;
+  padding: 40px 20px;
+  background: black; 
+}
+
+.about-container {
+  display: flex;
+  flex-wrap: wrap;       
+  align-items: center;  
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.about-image {
+  padding: 20px 35px 20px 0;
+  flex: 1 1 50%; 
+  box-sizing: border-box;
+}
+.about-text {
+  flex: 1 1 50%;        
+  padding: 20px 35px 20px 0;
+  box-sizing: border-box;
+}
+
+.about-image img {
+  width: 95%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.about-text h2 {
+  margin-bottom: 15px;
+  font-size: 4rem;
+  color: rgb(119, 30, 30);
+  font-family: 'Quantico';
+  
+}
+
+.about-text p {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* 📱 Mobile: stack vertically */
+@media (max-width: 768px) {
+  .about-image,
+  .about-text {
+    flex: 1 1 100%;      
+    text-align: center;  
+  }
+}
+
+
+/* SHOWROOM */
+
+.showroom {
+  padding: 0 32px 32px 32px;
+}
+
+/* Category Links */
+.categories {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.category-link {
+  text-decoration: none;
+  font-weight: bold;
+  color: darkgray;
+  font-size: 1.5rem;
+  transition: color 0.3s, text-shadow 0.3s;
+}
+
+.category-link:hover {
+  color: #ff6666;
+  text-shadow: 0 0 5px #ff6666;
+}
+
+.category-link.active {
+  color: darkred;
+  text-shadow: 0 0 8px #ff6666;
+}
+
+/* Hat Grid */
+.hat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.hat-card {
+  text-align: center;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.hat-card img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.cart-button {
+  margin-top: 0.5rem;
+  background-color: darkred;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cart-button:hover {
+  background-color: #ff6666;
+}
+
+.ig-logo {
+  width: 30px;
+}
