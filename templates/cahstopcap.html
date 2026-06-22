@@ -9,7 +9,6 @@
 </head>
 <body class="index">
   <header>
-    
     <nav class="header-nav">
       <span class="header-text"><a href="showroom.php">Shop</a></span>
       <span class="header-icon"><a href="showroom.php"><img src="assets/shop.png"></a></span>
@@ -17,7 +16,7 @@
       <span class="header-text"><a href="#.html">CreativeLabs</a></span>
       <span class="header-icon"><img src="assets/experiment2.png"></span>
 
-      <span class="header-text"><a href="#.html">About</a></span>
+      <span class="header-text"><a href="#about">About</a></span>
       <span class="header-icon"><img src="static/assets/about.png"></span>
 
       <span class="header-text"><a href="#.html">Contact</a></span>
@@ -30,60 +29,56 @@
     </div>
 
     <div class="carousel">
-        <button class="carousel-btn prev">❮</button> 
-        <button class="carousel-btn next">❯</button>
-  <div class="carousel-track">
+      <button class="carousel-btn prev">❮</button> 
+      <button class="carousel-btn next">❯</button>
+      <div class="carousel-track">
+        <div class="carousel-slide">
+          <img src="static/assets/cahstop-caps-at-river.jpg" alt="Hat 1">
+          <div class="caption">
+            <h2>CAHSTOPCAP</h2>
+            <button>Shop Now</button>
+          </div>
+        </div>
+        <div class="carousel-slide">
+          <img src="static/assets/gennow.jpg" alt="Hat 2">
+          <div class="caption">
+            <h2>GENNOW</h2>
+            <button>Playlist</button>
+          </div>
+        </div>
+        <div class="carousel-slide">
+          <img src="static/assets/rrwndz.jpg" alt="Hat 3">
+          <div class="caption">
+            <h2>Never Miss RRWNZDZ</h2>
+            <button>Check It Out</button>
+          </div>
+        </div>
+        <div class="carousel-slide">
+          <img src="static/assets/ydys.jpg" alt="Hat 4">
+          <div class="caption">
+            <h2>YDYS</h2>
+            <button>Shop Now</button>
+          </div>
+        </div>
+        <div class="carousel-slide">
+          <img src="static/assets/collabs.jpg" alt="Hat 5">
+          <div class="caption">
+            <h2>COLLABS</h2>
+            <button>Shop Now</button>
+          </div>
+        </div>
+        <div class="carousel-slide">
+          <img src="static/assets/caps-on-sti.jpg" alt="Hat 6">
+          <div class="caption">
+            <h2>CAHSTOPCAP</h2>
+            <button>Shop Now</button>
+          </div>
+        </div>
+      </div>
 
-    <div class="carousel-slide">
-      <img src="static/assets/cahstop-caps-at-river.jpg" alt="Hat 1">
-      <div class="caption">
-        <h2>CAHSTOPCAP</h2>
-        <button>Shop Now</button>
-      </div>
+      <!-- Slider dots -->
+      <div class="carousel-dots"></div>
     </div>
-    <div class="carousel-slide">
-      <img src="static/assets/gennow.jpg" alt="Hat 2">
-      <div class="caption">
-        <h2>GENNOW</h2>
-        <button>Playlist</button>
-      </div>
-    </div>
-    <div class="carousel-slide">
-      <img src="static/assets/rrwndz.jpg" alt="Hat 3">
-      <div class="caption">
-        <h2>Never Miss RRWNZDZ</h2>
-        <button>Check It Out</button>
-      </div>
-    </div>
-    <div class="carousel-slide">
-      <img src="static/assets/ydys.jpg" alt="Hat 4">
-      <div class="caption">
-        <h2>YDYS</h2>
-        <button>Shop Now</button>
-      </div>
-    </div>
-    <div class="carousel-slide">
-      <img src="static/assets/collabs.jpg" alt="Hat 5">
-      <div class="caption">
-        <h2>COLLABS</h2>
-        <button>Shop Now</button>
-      </div>
-    </div>
-    <div class="carousel-slide">
-      <img src="static/assets/caps-on-sti.jpg" alt="Hat 6">
-      <div class="caption">
-        <h2>CAHSTOPCAP</h2>
-        <button>Shop Now</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Slider dots -->
-  <div class="carousel-dots">
-    <span class="dot active"></span>
-    <span class="dot"></span>
-  </div>
-</div>
 
 
     <section class="showroom">
@@ -120,21 +115,22 @@
     <a href="showroom.html" class="button">VIEW MORE</a>
     </section>
 
-   <section class="about-section">
-  <div class="about-container">
-    <div class="about-image">
-      <img src="static/assets/about-pic.PNG" alt="Our Hat Store">
-    </div>
-    <div class="about-text">
-      <h2>About Us</h2>
-      <p>
-        At CAHSTOPCAP, we believe every hat tells a story. From timeless fedoras to modern snapbacks,
-        our collection blends tradition with style. We’re passionate about craftsmanship, community,
-        and helping you find the perfect fit for every occasion.
-      </p>
-    </div>
-  </div>
-</section>
+   <section class="about-section" id="about">
+    <div class="about-container">
+      <div class="about-image">
+        <img src="static/assets/about-pic.PNG" alt="Our Hat Store">
+      </div>
+      <div class="about-text">
+        <h2>About Us</h2>
+        <p>
+          Hat retailer based in Kingston Jamaica sharing the love for hat culture. 
+          Our goal is to provide an outlet for individuals to define their swag through headwear.  
+          From streetwear to luxury, our stylish collection speaks to the dreamers of Jamaica and abroad.
+          Hat plug a Yard!
+        </p>
+      </div>
+   </div>
+  </section>  
 
     <footer>
     <div class="footer-info">
@@ -151,6 +147,83 @@
     <p class="credit">done by maya-fay</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+      const carouselTrack = document.querySelector('.carousel-track');
+const carouselSlides = document.querySelectorAll('.carousel-slide');
+const prevBtn = document.querySelector('.prev');
+const nextBtn = document.querySelector('.next');
+const dotsContainer = document.querySelector('.carousel-dots');
+
+let currentIndex = 0;
+const totalSlides = carouselSlides.length;
+
+// Create dots dynamically
+function initDots() {
+  dotsContainer.innerHTML = '';
+  for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement('span');
+    dot.classList.add('dot');
+    if (i === 0) dot.classList.add('active');
+    dot.addEventListener('click', () => {
+      currentIndex = i;
+      updateCarousel();
+    });
+    dotsContainer.appendChild(dot);
+  }
+}
+
+// Update carousel position
+function updateCarousel() {
+  const slide = carouselSlides[0];
+  const slideWidth = slide.getBoundingClientRect().width;
+  const gap = 20; // from CSS gap
+  
+  carouselTrack.style.transform = `translateX(-${currentIndex * (slideWidth + gap)}px)`;
+  
+  // Update dots
+  const dots = dotsContainer.querySelectorAll('.dot');
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('active', index === currentIndex);
+  });
+}
+
+// Next slide
+nextBtn.addEventListener('click', () => {
+  currentIndex = (currentIndex + 1) % totalSlides;
+  updateCarousel();
+});
+
+// Previous slide
+prevBtn.addEventListener('click', () => {
+  currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+  updateCarousel();
+});
+
+// Auto-play
+let autoPlayInterval = setInterval(() => {
+  currentIndex = (currentIndex + 1) % totalSlides;
+  updateCarousel();
+}, 5000);
+
+// Pause on hover
+const carousel = document.querySelector('.carousel');
+carousel.addEventListener('mouseenter', () => {
+  clearInterval(autoPlayInterval);
+});
+
+carousel.addEventListener('mouseleave', () => {
+  autoPlayInterval = setInterval(() => {
+    currentIndex = (currentIndex + 1) % totalSlides;
+    updateCarousel();
+  }, 5000);
+});
+
+// Handle resize
+window.addEventListener('resize', updateCarousel);
+
+// Initialize
+initDots();
+updateCarousel();
+    </script>
 </body>
 </html>
