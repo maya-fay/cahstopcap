@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CahStopCap - Showroom</title>
+  <link rel="stylesheet" href="static/styles.css" />
+  <link rel="stylesheet" href="static/showroom.css" />
+</head>
+<body class="index">
+  
+  <!-- HEADER (from home page) -->
+  <header>
+    <nav class="header-nav">
+      <span class="header-text"><a href="/showroom">Shop</a></span>
+      <span class="header-icon"><a href="/showroom"><img src="assets/shop.png"></a></span>
+
+      <span class="header-text"><a href="showroom.html">CreativeLabs</a></span>
+      <span class="header-icon"><img src="assets/experiment2.png"></span>
+
+      <span class="header-text"><a href="#about">About</a></span>
+      <span class="header-icon"><img src="static/assets/about.png"></span>
+
+      <span class="header-text"><a href="#.html">Contact</a></span>
+      <span class="header-icon"><img src="static/assets/contact.png"></span>
+    </nav>
+  </header>
+
+  <!-- MARQUEE (from home page) -->
+  <div class="marquee">
+    <span> YDYS YDYS YDYS YDYS YDYS YDYS YDYS YDYS YDYS </span>
+  </div>
+
+  <!-- SHOWROOM SECTION -->
+  <section class="showroom-page">
+    <h2 class="showroom-header">SHOWROOM</h2>
+
+    <!-- Category Filter Tags -->
+    <div class="category-filter">
+      <button class="category-btn active" data-category="all">All Hats</button>
+      <button class="category-btn" data-category="snapback">Snapbacks</button>
+      <button class="category-btn" data-category="fedoras">Fedoras</button>
+      <button class="category-btn" data-category="beanies">Beanies</button>
+      <button class="category-btn" data-category="caps">Caps</button>
+    </div>
+
+    <!-- Advanced Filter Button -->
+    <button id="filterBtn" class="filter-toggle-btn">
+      <span>🔍 Filters</span>
+      <span class="filter-count"></span>
+    </button>
+
+    <!-- Active Filters Display (chips) -->
+    <div id="activeFilters" class="active-filters"></div>
+
+    <!-- Filter Popup -->
+    <div id="filterPopup" class="filter-popup">
+      <div class="filter-popup-header">
+        <h3>Filters</h3>
+        <button id="closeFilter" class="close-filter">×</button>
+      </div>
+      
+      <div class="filter-section">
+        <h4>Price Range</h4>
+        <div class="price-range">
+          <input type="number" id="minPrice" placeholder="Min $" min="0">
+          <input type="number" id="maxPrice" placeholder="Max $" min="0">
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Color</h4>
+        <div class="filter-options">
+          <label><input type="checkbox" name="color" value="black"> Black</label>
+          <label><input type="checkbox" name="color" value="white"> White</label>
+          <label><input type="checkbox" name="color" value="red"> Red</label>
+          <label><input type="checkbox" name="color" value="blue"> Blue</label>
+          <label><input type="checkbox" name="color" value="gray"> Gray</label>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Brand</h4>
+        <div class="filter-options">
+          <label><input type="checkbox" name="brand" value="armani"> Armani Exchange</label>
+          <label><input type="checkbox" name="brand" value="true-religion"> True Religion</label>
+          <label><input type="checkbox" name="brand" value="psycho-bunny"> Psycho Bunny</label>
+          <label><input type="checkbox" name="brand" value="custom"> Custom</label>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Size</h4>
+        <div class="filter-options">
+          <label><input type="checkbox" name="size" value="S"> Small</label>
+          <label><input type="checkbox" name="size" value="M"> Medium</label>
+          <label><input type="checkbox" name="size" value="L"> Large</label>
+          <label><input type="checkbox" name="size" value="XL"> XL</label>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button id="clearFilters" class="clear-btn">Clear All</button>
+        <button id="applyFilters" class="apply-btn">Apply Filters</button>
+      </div>
+    </div>
+
+    <!-- Hat Grid -->
+    <div class="hat-grid" id="hatGrid">
+      <!-- Hat Card 1 -->
+      <div class="hat-card" data-category="snapback" data-color="black" data-brand="armani" data-price="8500" data-size="M">
+        <img src="static/assets/hat1.jpg" alt="Armani Exchange Hat" />
+        <h3 class="hat-name">Armani Exchange</h3>
+        <p class="hat-price">$8,500</p>
+        <button class="cart-button" data-hat-id="1">🛒</button>
+        <a href="hat-details.html?id=1" class="more-details">More Details</a>
+      </div>
+
+      <!-- Hat Card 2 -->
+      <div class="hat-card" data-category="fedoras" data-color="gray" data-brand="true-religion" data-price="5000" data-size="L">
+        <img src="static/assets/hat2.jpg" alt="True Religion Hat" />
+        <h3 class="hat-name">True Religion</h3>
+        <p class="hat-price">$5,000</p>
+        <button class="cart-button" data-hat-id="2">🛒</button>
+        <a href="hat-details.html?id=2" class="more-details">More Details</a>
+      </div>
+
+      <!-- Hat Card 3 -->
+      <div class="hat-card" data-category="snapback" data-color="red" data-brand="armani" data-price="9000" data-size="M">
+        <img src="static/assets/hat3.jpg" alt="Armani Exchange Hat" />
+        <h3 class="hat-name">Armani Exchange</h3>
+        <p class="hat-price">$9,000</p>
+        <button class="cart-button" data-hat-id="3">🛒</button>
+        <a href="hat-details.html?id=3" class="more-details">More Details</a>
+      </div>
+
+      <!-- Hat Card 4 -->
+      <div class="hat-card" data-category="caps" data-color="blue" data-brand="psycho-bunny" data-price="7000" data-size="S">
+        <img src="static/assets/hat4.jpg" alt="Psycho Bunny Hat" />
+        <h3 class="hat-name">Psycho Bunny</h3>
+        <p class="hat-price">$7,000</p>
+        <button class="cart-button" data-hat-id="4">🛒</button>
+        <a href="hat-details.html?id=4" class="more-details">More Details</a>
+      </div>
+
+      <!-- Hat Card 5 -->
+      <div class="hat-card" data-category="beanies" data-color="black" data-brand="custom" data-price="3500" data-size="M">
+        <img src="static/assets/hat5.jpg" alt="Custom Beanie" />
+        <h3 class="hat-name">Custom Beanie</h3>
+        <p class="hat-price">$3,500</p>
+        <button class="cart-button" data-hat-id="5">🛒</button>
+        <a href="hat-details.html?id=5" class="more-details">More Details</a>
+      </div>
+
+      <!-- Hat Card 6 -->
+      <div class="hat-card" data-category="caps" data-color="white" data-brand="true-religion" data-price="6200" data-size="L">
+        <img src="static/assets/hat6.jpg" alt="True Religion Cap" />
+        <h3 class="hat-name">True Religion Cap</h3>
+        <p class="hat-price">$6,200</p>
+        <button class="cart-button" data-hat-id="6">🛒</button>
+        <a href="hat-details.html?id=6" class="more-details">More Details</a>
+      </div>
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="no-results" style="display: none;">
+      <p>No hats match your filters. Try clearing some filters.</p>
+    </div>
+
+    <!-- Shopping Cart Icon (floating) -->
+    <a href="cart.html" class="floating-cart">
+      🛒 <span id="cartCount">0</span>
+    </a>
+  </section>
+
+  <!-- FOOTER (from home page) -->
+  <footer>
+    <div class="footer-info">
+      <div>
+        <h4>Find Us</h4>
+        <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH</p>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p>cahstopcap@gmail.com</p>
+        <a href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank"><img src="static/assets/instagram.png" class="ig-logo" alt="Instagram" /></a>
+      </div>
+    </div>
+    <p class="credit">done by maya-fay</p>
+  </footer>
+
+  <script src="showroom.js"></script>
+</body>
+</html>
