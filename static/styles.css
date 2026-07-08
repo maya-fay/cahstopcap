@@ -24,12 +24,12 @@ body {
    HEADER
    ========================================= */
 header {
-  background-image: url('assets/cahstopcap grafitti wall.png');
+  background-image: url('/static/logo.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   text-align: center;
-  padding: 65px 1rem 20px 1rem;
+  padding: 1rem 1rem 20px 1rem;
   height: 450px;
   position: relative;
   display: flex;
@@ -58,6 +58,7 @@ header {
 
 
 .header-nav {
+  padding-top: 15px;
   display: flex;
   justify-content: center;
   gap: 8rem;

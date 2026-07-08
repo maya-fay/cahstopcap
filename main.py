@@ -65,7 +65,7 @@ def get_hats(
     if size:
         query = query.where(Hat.size == size)
     
-    hats = db.execute(query).all()
+    hats = db.execute(query).scalars().all()
     
     return [
         {

@@ -1,28 +1,67 @@
 <!DOCTYPE html>
-    <html lang="en">
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CahStopCap</title>
     <link rel="stylesheet" href="static/styles.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=storefront" />
+    <style>
+      header {
+        background-color: black;
+        background-image: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0rem 1rem 1rem;
+        height: auto;
+        gap: 1rem;
+      }
+
+      .header-logo {
+        display: flex;
+        justify-content: center;
+        height: 500px;
+        width: 500px;
+      }
+
+      .header-logo img {
+        height: 500px;
+        width: 500px;
+        object-fit: contain;
+      }
+
+      .header-nav {
+        justify-content: space-evenly;
+        width: 100%;
+        gap: 0;
+      }
+
+      @media (max-width: 834px) {
+        .header-logo img { height: 100px; }
+      }
+
+      @media (max-width: 480px) {
+        .header-logo img { height: 80px; }
+      }
+    </style>
 </head>
 <body class="index">
   <header>
+    <div class="header-logo">
+      <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo"></a>
+    </div>
     <nav class="header-nav">
       <span class="header-text"><a href="/showroom">Shop</a></span>
-      <span class="header-icon"><a href="showroom.php"><img src="assets/shop.png"></a></span>
-
-      <span class="header-text"><a href="#.html">CreativeLabs</a></span>
-      <span class="header-icon"><img src="assets/experiment2.png"></span>
+      <span class="header-icon"><a href="/showroom"><img src="/static/assets/shop.png"></a></span>
 
       <span class="header-text"><a href="#about">About</a></span>
-      <span class="header-icon"><img src="static/assets/about.png"></span>
+      <span class="header-icon"><img src="/static/assets/about.png"></span>
 
-      <span class="header-text"><a href="#.html">Contact</a></span>
-      <span class="header-icon"><img src="static/assets/contact.png"></span>
+      <span class="header-text"><a href="#contact">Contact</a></span>
+      <span class="header-icon"><img src="/static/assets/contact.png"></span>
     </nav>
-</header>
+  </header>
 
     <div class="marquee">
         <span> YDYS YDYS YDYS YDYS YDYS YDYS YDYS YDYS YDYS </span>
@@ -33,42 +72,42 @@
       <button class="carousel-btn next">❯</button>
       <div class="carousel-track">
         <div class="carousel-slide">
-          <img src="static/assets/cahstop-caps-at-river.jpg" alt="Hat 1">
+          <img src="/static/assets/cahstop-caps-at-river.jpg" alt="Hat 1">
           <div class="caption">
             <h2>CAHSTOPCAP</h2>
             <button>Shop Now</button>
           </div>
         </div>
         <div class="carousel-slide">
-          <img src="static/assets/gennow.jpg" alt="Hat 2">
+          <img src="/static/assets/gennow.jpg" alt="Hat 2">
           <div class="caption">
             <h2>GENNOW</h2>
             <button>Playlist</button>
           </div>
         </div>
         <div class="carousel-slide">
-          <img src="static/assets/rrwndz.jpg" alt="Hat 3">
+          <img src="/static/assets/rrwndz.jpg" alt="Hat 3">
           <div class="caption">
             <h2>Never Miss RRWNZDZ</h2>
             <button>Check It Out</button>
           </div>
         </div>
         <div class="carousel-slide">
-          <img src="static/assets/ydys.jpg" alt="Hat 4">
+          <img src="/static/assets/ydys.jpg" alt="Hat 4">
           <div class="caption">
             <h2>YDYS</h2>
             <button>Shop Now</button>
           </div>
         </div>
         <div class="carousel-slide">
-          <img src="static/assets/collabs.jpg" alt="Hat 5">
+          <img src="/static/assets/collabs.jpg" alt="Hat 5">
           <div class="caption">
             <h2>COLLABS</h2>
             <button>Shop Now</button>
           </div>
         </div>
         <div class="carousel-slide">
-          <img src="static/assets/caps-on-sti.jpg" alt="Hat 6">
+          <img src="/static/assets/caps-on-sti.jpg" alt="Hat 6">
           <div class="caption">
             <h2>CAHSTOPCAP</h2>
             <button>Shop Now</button>
@@ -80,150 +119,133 @@
       <div class="carousel-dots"></div>
     </div>
 
-
     <section class="showroom">
-    <h2 class="showroom-header">SHOWROOM</h2>
-    <div class="hat-grid">
-    <!-- Repeat this block for each hat -->
-    <div class="hat-card">
-      <img src="static/assets/hat1.jpg" alt="Hat Image">
-      <h3>Armani Exchange</h3>
-      <p>$8500</p>
-      <button class="cart-button">🛒</button>
-    </div>
-    <div class="hat-card">
-      <img src="static/assets/hat2.jpg" alt="Hat Image">
-      <h3>True Religion</h3>
-      <p>$5000</p>
-      <button class="cart-button">🛒</button>
-    </div>
-    <div class="hat-card">
-      <img src="static/assets/hat3.jpg" alt="Hat Image">
-      <h3>Armani Exchange</h3>
-      <p>$9000</p>
-      <button class="cart-button">🛒</button>
-    </div>
-    <div class="hat-card">
-      <img src="static/assets/hat4.jpg" alt="Hat Image">
-      <h3>Psycho Bunny</h3>
-      <p>$7000</p>
-      <button class="cart-button">🛒</button>
-    </div>
-    <!-- Add more .hat-card elements as needed -->
-  </div>
-    
-    <a href="showroom.html" class="button">VIEW MORE</a>
+      <h2 class="showroom-header">SHOWROOM</h2>
+      <div class="hat-grid">
+        <div class="hat-card">
+          <img src="/static/assets/hat1.jpg" alt="Hat Image">
+          <h3>Armani Exchange</h3>
+          <p>$8500</p>
+          <button class="cart-button">🛒</button>
+        </div>
+        <div class="hat-card">
+          <img src="/static/assets/hat2.jpg" alt="Hat Image">
+          <h3>True Religion</h3>
+          <p>$5000</p>
+          <button class="cart-button">🛒</button>
+        </div>
+        <div class="hat-card">
+          <img src="/static/assets/hat3.jpg" alt="Hat Image">
+          <h3>Armani Exchange</h3>
+          <p>$9000</p>
+          <button class="cart-button">🛒</button>
+        </div>
+        <div class="hat-card">
+          <img src="/static/assets/hat4.jpg" alt="Hat Image">
+          <h3>Psycho Bunny</h3>
+          <p>$7000</p>
+          <button class="cart-button">🛒</button>
+        </div>
+      </div>
+      <a href="/showroom" class="button">VIEW MORE</a>
     </section>
 
-   <section class="about-section" id="about">
-    <div class="about-container">
-      <div class="about-image">
-        <img src="static/assets/about-pic.PNG" alt="Our Hat Store">
+    <section class="about-section" id="about">
+      <div class="about-container">
+        <div class="about-image">
+          <img src="/static/assets/about-pic.PNG" alt="Our Hat Store">
+        </div>
+        <div class="about-text">
+          <h2>About Us</h2>
+          <p>
+            Hat retailer based in Kingston Jamaica sharing the love for hat culture. 
+            Our goal is to provide an outlet for individuals to define their swag through headwear.  
+            From streetwear to luxury, our stylish collection speaks to the dreamers of Jamaica and abroad.
+            Hat plug a Yard!
+          </p>
+        </div>
       </div>
-      <div class="about-text">
-        <h2>About Us</h2>
-        <p>
-          Hat retailer based in Kingston Jamaica sharing the love for hat culture. 
-          Our goal is to provide an outlet for individuals to define their swag through headwear.  
-          From streetwear to luxury, our stylish collection speaks to the dreamers of Jamaica and abroad.
-          Hat plug a Yard!
-        </p>
-      </div>
-   </div>
-  </section>  
+    </section>
 
     <footer>
-    <div class="footer-info">
-    <div>
-    <h4>Find Us</h4>
-    <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH</p>
-    </div>
-    <div>
-    <h4>Contact</h4>
-    <p>cahstopcap@gmail.com</p>
-    <a href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank"><img src="static/assets/instagram.png" class="ig-logo" alt="Instagram" /></a>
-    </div>
-    </div>
-    <p class="credit">done by maya-fay</p>
+      <div class="footer-info">
+        <div>
+          <h4>Find Us</h4>
+          <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH</p>
+        </div>
+        <div id="contact">
+          <h4>Contact</h4>
+          <p>cahstopcap@gmail.com</p>
+          <a href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank">
+            <img src="/static/assets/instagram.png" class="ig-logo" alt="Instagram" />
+          </a>
+        </div>
+      </div>
+      <p class="credit">done by maya-fay</p>
     </footer>
 
     <script>
       const carouselTrack = document.querySelector('.carousel-track');
-const carouselSlides = document.querySelectorAll('.carousel-slide');
-const prevBtn = document.querySelector('.prev');
-const nextBtn = document.querySelector('.next');
-const dotsContainer = document.querySelector('.carousel-dots');
+      const carouselSlides = document.querySelectorAll('.carousel-slide');
+      const prevBtn = document.querySelector('.prev');
+      const nextBtn = document.querySelector('.next');
+      const dotsContainer = document.querySelector('.carousel-dots');
 
-let currentIndex = 0;
-const totalSlides = carouselSlides.length;
+      let currentIndex = 0;
+      const totalSlides = carouselSlides.length;
 
-// Create dots dynamically
-function initDots() {
-  dotsContainer.innerHTML = '';
-  for (let i = 0; i < totalSlides; i++) {
-    const dot = document.createElement('span');
-    dot.classList.add('dot');
-    if (i === 0) dot.classList.add('active');
-    dot.addEventListener('click', () => {
-      currentIndex = i;
+      function initDots() {
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < totalSlides; i++) {
+          const dot = document.createElement('span');
+          dot.classList.add('dot');
+          if (i === 0) dot.classList.add('active');
+          dot.addEventListener('click', () => {
+            currentIndex = i;
+            updateCarousel();
+          });
+          dotsContainer.appendChild(dot);
+        }
+      }
+
+      function updateCarousel() {
+        const slide = carouselSlides[0];
+        const slideWidth = slide.getBoundingClientRect().width;
+        const gap = 20;
+        carouselTrack.style.transform = `translateX(-${currentIndex * (slideWidth + gap)}px)`;
+        const dots = dotsContainer.querySelectorAll('.dot');
+        dots.forEach((dot, index) => {
+          dot.classList.toggle('active', index === currentIndex);
+        });
+      }
+
+      nextBtn.addEventListener('click', () => {
+        currentIndex = (currentIndex + 1) % totalSlides;
+        updateCarousel();
+      });
+
+      prevBtn.addEventListener('click', () => {
+        currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+        updateCarousel();
+      });
+
+      let autoPlayInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % totalSlides;
+        updateCarousel();
+      }, 5000);
+
+      const carousel = document.querySelector('.carousel');
+      carousel.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
+      carousel.addEventListener('mouseleave', () => {
+        autoPlayInterval = setInterval(() => {
+          currentIndex = (currentIndex + 1) % totalSlides;
+          updateCarousel();
+        }, 5000);
+      });
+
+      window.addEventListener('resize', updateCarousel);
+      initDots();
       updateCarousel();
-    });
-    dotsContainer.appendChild(dot);
-  }
-}
-
-// Update carousel position
-function updateCarousel() {
-  const slide = carouselSlides[0];
-  const slideWidth = slide.getBoundingClientRect().width;
-  const gap = 20; // from CSS gap
-  
-  carouselTrack.style.transform = `translateX(-${currentIndex * (slideWidth + gap)}px)`;
-  
-  // Update dots
-  const dots = dotsContainer.querySelectorAll('.dot');
-  dots.forEach((dot, index) => {
-    dot.classList.toggle('active', index === currentIndex);
-  });
-}
-
-// Next slide
-nextBtn.addEventListener('click', () => {
-  currentIndex = (currentIndex + 1) % totalSlides;
-  updateCarousel();
-});
-
-// Previous slide
-prevBtn.addEventListener('click', () => {
-  currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
-  updateCarousel();
-});
-
-// Auto-play
-let autoPlayInterval = setInterval(() => {
-  currentIndex = (currentIndex + 1) % totalSlides;
-  updateCarousel();
-}, 5000);
-
-// Pause on hover
-const carousel = document.querySelector('.carousel');
-carousel.addEventListener('mouseenter', () => {
-  clearInterval(autoPlayInterval);
-});
-
-carousel.addEventListener('mouseleave', () => {
-  autoPlayInterval = setInterval(() => {
-    currentIndex = (currentIndex + 1) % totalSlides;
-    updateCarousel();
-  }, 5000);
-});
-
-// Handle resize
-window.addEventListener('resize', updateCarousel);
-
-// Initialize
-initDots();
-updateCarousel();
     </script>
 </body>
 </html>

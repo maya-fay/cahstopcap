@@ -21,6 +21,8 @@ class Hat(Base):
     stock_quantity = Column(Integer, default=0)
     is_available = Column(Boolean, default=True)
 
+    order_items = relationship("OrderItem", back_populates="hat")
+
 class Category(Base):
     __tablename__ = "categories"
     
