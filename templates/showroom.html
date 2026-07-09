@@ -125,7 +125,8 @@
 
       hats.forEach(hat => {
         const card = document.createElement('div');
-        card.className = 'hat-card';
+        const outOfStock = hat.stock_quantity <= 0;
+        card.className = 'hat-card' + (outOfStock ? ' out-of-stock' : '');
 
         const price = hat.price.toLocaleString('en-US', {
           style: 'currency',
@@ -133,24 +134,32 @@
           minimumFractionDigits: 0
         });
 
-        const imgSrc = hat.image_url || 'static/assets/placeholder.jpg';
+        const imgSrc = resolveImagePath(hat.image_url);
 
         card.innerHTML = `
           <div class="hat-card-image">
             <img src="${imgSrc}" alt="${hat.name}" loading="lazy" />
+            ${outOfStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
           </div>
           <div class="hat-card-info">
             <h3 class="hat-name">${hat.name}</h3>
             <p class="hat-price">${price}</p>
           </div>
           <div class="hat-card-actions">
-            <button class="cart-button" data-hat-id="${hat.id}">Add to Cart</button>
-            <a href="/hat/${hat.id}" class="more-details">View Details</a>
+            <button class="cart-button" data-hat-id="${hat.id}" ${outOfStock ? 'disabled' : ''}>Add to Cart</button>
+            <a href="/hat/${hat.id}" class="more-details" ${outOfStock ? 'aria-disabled="true" tabindex="-1"' : ''}>View Details</a>
           </div>
         `;
 
         // Add to cart handler
-        card.querySelector('.cart-button').addEventListener('click', () => addToCart(hat.id));
+        const cartBtn = card.querySelector('.cart-button');
+        if (!outOfStock) {
+          cartBtn.addEventListener('click', () => addToCart(hat.id, hat.stock_quantity));
+        }
+
+        if (outOfStock) {
+          card.querySelector('.more-details').addEventListener('click', (e) => e.preventDefault());
+        }
 
         grid.appendChild(card);
       });
@@ -167,23 +176,31 @@
     });
 
     // ── Cart ─────────────────────────────────────────────────────────
+    function resolveImagePath(url) {
+      if (!url) return '/static/assets/placeholder.jpg';
+      if (url.startsWith('http') || url.startsWith('/')) return url;
+      return '/' + url;
+    }
+
     function getCart() {
-      return JSON.parse(localStorage.getItem('cart') || '[]');
+      return JSON.parse(localStorage.getItem('cart') || '{}');
     }
 
     function saveCart(cart) {
       localStorage.setItem('cart', JSON.stringify(cart));
-      document.getElementById('cartCount').textContent = cart.length;
+      const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+      document.getElementById('cartCount').textContent = count;
     }
 
-    function addToCart(hatId) {
+    function addToCart(hatId, stockQuantity) {
       const cart = getCart();
-      if (!cart.includes(hatId)) cart.push(hatId);
+      const nextQty = (cart[hatId] || 0) + 1;
+      cart[hatId] = Math.min(nextQty, stockQuantity);
       saveCart(cart);
     }
 
     // ── Init ─────────────────────────────────────────────────────────
-    document.getElementById('cartCount').textContent = getCart().length;
+    saveCart(getCart());
     loadHats('all');
   </script>
 </body>

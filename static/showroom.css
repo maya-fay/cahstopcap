@@ -323,6 +323,58 @@ header {
 }
 
 /* =========================================
+   OUT OF STOCK
+   ========================================= */
+.hat-card.out-of-stock {
+  background-color: #e9e9e9;
+}
+
+.hat-card.out-of-stock:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.hat-card.out-of-stock .hat-card-image img {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+.hat-card.out-of-stock .hat-name,
+.hat-card.out-of-stock .hat-price {
+  color: #999;
+}
+
+.out-of-stock-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.hat-card-image {
+  position: relative;
+}
+
+.cart-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.more-details[aria-disabled="true"] {
+  border-color: #ccc;
+  color: #aaa;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* =========================================
    STATES
    ========================================= */
 .no-results {

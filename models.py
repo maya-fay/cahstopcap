@@ -36,7 +36,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True)
     customer_name = Column(String(100), nullable=False)
     total_price = Column(DECIMAL(10, 2), nullable=False)
-    status = Column(String(20), default='pending')
+    status = Column(String(20), default='placed')
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationship to items (ONE order has MANY items)

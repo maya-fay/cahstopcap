@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CahStopCap - Cart</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/showroom.css" />
+  <link rel="stylesheet" href="/static/cart.css" />
+</head>
+<body class="index">
+
+  <!-- HEADER -->
+  <header>
+    <nav class="header-nav">
+      <div class="nav-item">
+        <span class="nav-text"><a href="/showroom">Shop</a></span>
+        <span class="nav-icon"><a href="/showroom"><img src="/static/assets/shop.png" alt="Shop"></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/#about">About</a></span>
+        <span class="nav-icon"><a href="/#about"><img src="/static/assets/about.png" alt="About"></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/contact">Contact</a></span>
+        <span class="nav-icon"><a href="/contact"><img src="/static/assets/contact.png" alt="Contact"></a></span>
+      </div>
+    </nav>
+    <div class="header-logo">
+      <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo"></a>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <div class="marquee">
+    <span> YDYS YDYS YDYS YDYS YDYS YDYS YDYS YDYS YDYS </span>
+  </div>
+
+  <!-- CART SECTION -->
+  <section class="cart-page">
+    <h2 class="showroom-header">YOUR CART</h2>
+
+    <div id="cartContent">
+      <p class="loading-state">Loading cart...</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-info">
+      <div>
+        <h4>Find Us</h4>
+        <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH</p>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <p>cahstopcap@gmail.com</p>
+        <a href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank">
+          <img src="/static/assets/instagram.png" class="ig-logo" alt="Instagram" />
+        </a>
+      </div>
+    </div>
+    <p class="credit">done by maya-fay</p>
+  </footer>
+
+  <script>
+    function resolveImagePath(url) {
+      if (!url) return '/static/assets/placeholder.jpg';
+      if (url.startsWith('http') || url.startsWith('/')) return url;
+      return '/' + url;
+    }
+
+    function getCart() {
+      return JSON.parse(localStorage.getItem('cart') || '{}');
+    }
+
+    function saveCart(cart) {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function cartCount(cart) {
+      return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+    }
+
+    let hatsById = {};
+
+    async function loadCart() {
+      const container = document.getElementById('cartContent');
+      const cart = getCart();
+      const hatIds = Object.keys(cart).map(Number).filter(id => cart[id] > 0);
+
+      if (hatIds.length === 0) {
+        container.innerHTML = `
+          <div class="cart-empty">
+            <p>Your cart is empty.</p>
+            <a href="/showroom" class="button">Back to Shop</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/hats');
+        if (!res.ok) throw new Error('Failed to load hats');
+        const hats = await res.json();
+        hatsById = Object.fromEntries(hats.map(h => [h.id, h]));
+      } catch (err) {
+        container.innerHTML = '<p class="loading-state">Could not load your cart. Please try again.</p>';
+        console.error(err);
+        return;
+      }
+
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cartContent');
+      const cart = getCart();
+      const hatIds = Object.keys(cart).map(Number).filter(id => cart[id] > 0 && hatsById[id]);
+
+      if (hatIds.length === 0) {
+        container.innerHTML = `
+          <div class="cart-empty">
+            <p>Your cart is empty.</p>
+            <a href="/showroom" class="button">Back to Shop</a>
+          </div>
+        `;
+        return;
+      }
+
+      let total = 0;
+      let hasIssue = false;
+
+      const rows = hatIds.map(id => {
+        const hat = hatsById[id];
+        const qty = cart[id];
+        const outOfStock = hat.stock_quantity <= 0;
+        const exceedsStock = qty > hat.stock_quantity;
+        if (outOfStock || exceedsStock) hasIssue = true;
+
+        const lineTotal = hat.price * qty;
+        total += lineTotal;
+
+        const priceStr = hat.price.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+        const lineTotalStr = lineTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+
+        return `
+          <div class="cart-row ${outOfStock ? 'cart-row-issue' : ''}" data-hat-id="${id}">
+            <img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" class="cart-row-image" />
+            <div class="cart-row-info">
+              <h3>${hat.name}</h3>
+              <p class="cart-row-price">${priceStr}</p>
+              ${outOfStock ? '<p class="cart-row-warning">Out of stock — remove to continue</p>' : ''}
+              ${!outOfStock && exceedsStock ? `<p class="cart-row-warning">Only ${hat.stock_quantity} left — quantity reduced</p>` : ''}
+            </div>
+            <div class="cart-row-qty">
+              <button class="qty-btn" data-action="dec">-</button>
+              <span class="qty-value">${qty}</span>
+              <button class="qty-btn" data-action="inc">+</button>
+            </div>
+            <div class="cart-row-total">${lineTotalStr}</div>
+            <button class="cart-row-remove" data-action="remove">&times;</button>
+          </div>
+        `;
+      }).join('');
+
+      const totalStr = total.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+
+      container.innerHTML = `
+        <div class="cart-list">${rows}</div>
+        <div class="cart-summary">
+          <div class="cart-summary-total">
+            <span>Total</span>
+            <span>${totalStr}</span>
+          </div>
+          <label class="cart-name-label">
+            Name for order
+            <input type="text" id="customerName" placeholder="Your name" required />
+          </label>
+          <p class="cart-demo-note">Demo checkout — no real payment is processed.</p>
+          <button id="placeOrderBtn" class="button place-order-btn" ${hasIssue ? 'disabled' : ''}>
+            Place Order
+          </button>
+          <p id="orderError" class="cart-row-warning" style="display:none;"></p>
+        </div>
+      `;
+
+      container.querySelectorAll('.cart-row').forEach(row => {
+        const id = Number(row.dataset.hatId);
+        row.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(id, 1));
+        row.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(id, -1));
+        row.querySelector('[data-action="remove"]').addEventListener('click', () => removeItem(id));
+      });
+
+      const placeOrderBtn = document.getElementById('placeOrderBtn');
+      if (placeOrderBtn) placeOrderBtn.addEventListener('click', placeOrder);
+    }
+
+    function changeQty(id, delta) {
+      const cart = getCart();
+      const hat = hatsById[id];
+      let qty = (cart[id] || 0) + delta;
+
+      if (qty < 1) {
+        delete cart[id];
+      } else {
+        if (hat && qty > hat.stock_quantity) qty = hat.stock_quantity;
+        cart[id] = qty;
+      }
+
+      saveCart(cart);
+      renderCart();
+    }
+
+    function removeItem(id) {
+      const cart = getCart();
+      delete cart[id];
+      saveCart(cart);
+      renderCart();
+    }
+
+    async function placeOrder() {
+      const errorEl = document.getElementById('orderError');
+      errorEl.style.display = 'none';
+
+      const nameInput = document.getElementById('customerName');
+      const customerName = nameInput.value.trim();
+
+      if (!customerName) {
+        errorEl.textContent = 'Please enter your name.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const cart = getCart();
+      const items = Object.entries(cart)
+        .filter(([, qty]) => qty > 0)
+        .map(([hatId, qty]) => ({ hat_id: Number(hatId), quantity: qty }));
+
+      const btn = document.getElementById('placeOrderBtn');
+      btn.disabled = true;
+      btn.textContent = 'Placing order...';
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customer_name: customerName, items })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'Could not place order');
+        }
+
+        localStorage.removeItem('cart');
+        renderConfirmation(data);
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Place Order';
+      }
+    }
+
+    function renderConfirmation(order) {
+      const container = document.getElementById('cartContent');
+      const totalStr = order.total_price.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+
+      container.innerHTML = `
+        <div class="cart-confirmation">
+          <h3>Order placed!</h3>
+          <p>Thanks, ${order.customer_name} — order #${order.id} has been placed.</p>
+          <p>Total: ${totalStr}</p>
+          <a href="/showroom" class="button">Continue Shopping</a>
+        </div>
+      `;
+    }
+
+    loadCart();
+  </script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+/* =========================================
+   ADMIN SHARED
+   ========================================= */
+.admin-body {
+  background-color: #f2f2f2;
+  min-height: 100vh;
+}
+
+/* =========================================
+   LOGIN PAGE
+   ========================================= */
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+}
+
+.admin-login-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+
+.admin-login-logo {
+  width: 90px;
+  height: auto;
+  margin-bottom: 0.5rem;
+}
+
+.admin-login-card h2 {
+  font-family: 'Quantico', sans-serif;
+  color: rgb(119, 30, 30);
+  margin: 0.5rem 0 1.2rem;
+}
+
+.admin-login-error {
+  color: darkred;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.85rem;
+  color: #333;
+  text-align: left;
+}
+
+.admin-login-form input {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.admin-login-form .button {
+  background-color: darkred;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Quantico', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.admin-login-form .button:hover {
+  background-color: #b22222;
+}
+
+/* =========================================
+   DASHBOARD HEADER + TABS
+   ========================================= */
+header.admin-header {
+  background-color: black;
+  background-image: none;
+  height: auto;
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 2rem;
+}
+
+.admin-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-header-logo {
+  height: 48px;
+  width: auto;
+}
+
+.admin-header-title h1 {
+  color: white;
+  font-family: 'Quantico', sans-serif;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.admin-logout-link {
+  color: white;
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.85rem;
+  text-decoration: none;
+  border: 1px solid white;
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+}
+
+.admin-logout-link:hover {
+  background: white;
+  color: black;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0.6rem;
+  padding: 1rem 2rem 0;
+  background: #f2f2f2;
+}
+
+.admin-tab-btn {
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.5rem 1.2rem;
+  border: 2px solid darkred;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: darkred;
+  cursor: pointer;
+}
+
+.admin-tab-btn.active {
+  background: darkred;
+  color: white;
+}
+
+.admin-main {
+  padding: 1.5rem 2rem 3rem;
+}
+
+.admin-tab-panel {
+  display: none;
+}
+
+.admin-tab-panel.active {
+  display: block;
+}
+
+.admin-loading {
+  text-align: center;
+  color: #999;
+  font-family: 'Quantico', sans-serif;
+  padding: 2rem;
+}
+
+/* =========================================
+   ORDERS KANBAN
+   ========================================= */
+.orders-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 1000px) {
+  .orders-board { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .orders-board { grid-template-columns: 1fr; }
+}
+
+.orders-column {
+  background: #e9e9e9;
+  border-radius: 8px;
+  padding: 0.8rem;
+  min-height: 200px;
+}
+
+.orders-column h3 {
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.95rem;
+  color: rgb(119, 30, 30);
+  margin: 0 0 0.7rem;
+  text-align: center;
+}
+
+.orders-column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 6px;
+  padding: 0.7rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Quantico', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #111;
+}
+
+.order-customer {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.order-date {
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.order-items {
+  margin: 0 0 0.6rem;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  color: #444;
+}
+
+.order-status-select {
+  width: 100%;
+  padding: 0.35rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.8rem;
+}
+
+/* =========================================
+   HATS TABLE
+   ========================================= */
+.hats-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.hats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.hats-table th {
+  font-family: 'Quantico', sans-serif;
+  text-align: left;
+  color: rgb(119, 30, 30);
+  padding: 0.6rem 0.5rem;
+  border-bottom: 2px solid #ddd;
+}
+
+.hats-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.hats-table-image {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.hat-field {
+  padding: 0.35rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.hats-table input[type="text"].hat-field {
+  width: 140px;
+}
+
+.hats-table input[type="number"].hat-field {
+  width: 80px;
+}
+
+.hat-save-btn {
+  background-color: darkred;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Quantico', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.hat-save-btn:hover:not(:disabled) {
+  background-color: #b22222;
+}
+
+.hat-save-btn:disabled {
+  background-color: #999;
+  cursor: default;
+}
