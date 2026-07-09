@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CahStopCap - Hat Details</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/showroom.css" />
+  <link rel="stylesheet" href="/static/hat-detail.css" />
+</head>
+<body class="index">
+
+  <!-- HEADER -->
+  <header>
+    <nav class="header-nav">
+      <div class="nav-item">
+        <span class="nav-text"><a href="/showroom">Shop</a></span>
+        <span class="nav-icon"><a href="/showroom"><img src="/static/assets/shop.png" alt="Shop"></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/#about">About</a></span>
+        <span class="nav-icon"><a href="/#about"><img src="/static/assets/about.png" alt="About"></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/contact">Contact</a></span>
+        <span class="nav-icon"><a href="/contact"><img src="/static/assets/contact.png" alt="Contact"></a></span>
+      </div>
+    </nav>
+    <div class="header-logo">
+      <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo"></a>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <div class="marquee">
+    <span> YDYS YOU DEFINE YOUR SWAG YDYS YOU DEFINE YOUR SWAG YDYS YOU DEFINE YOUR SWAG YDYS </span>
+  </div>
+
+  <!-- HAT DETAIL SECTION -->
+  <section class="hat-detail-page">
+    <div id="hatDetailContent">
+      <p class="loading-state">Loading hat...</p>
+    </div>
+  </section>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-info">
+      <div>
+        <h4>Find Us</h4>
+        <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH</p>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <div class="footer-social">
+          <a href="mailto:cahstopcap@gmail.com" class="footer-icon-link" aria-label="Email us">
+            <svg viewBox="0 0 24 24" class="email-icon" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke="white" stroke-width="1.6"/>
+              <path d="M3 6.5L12 13L21 6.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank" class="footer-icon-link">
+            <img src="/static/assets/instagram.png" class="ig-logo" alt="Instagram" />
+          </a>
+        </div>
+      </div>
+    </div>
+    <p class="credit">done by maya-fay</p>
+  </footer>
+
+  <script>
+    function resolveImagePath(url) {
+      if (!url) return '/static/assets/placeholder.jpg';
+      if (url.startsWith('http') || url.startsWith('/')) return url;
+      return '/' + url;
+    }
+
+    function getCart() {
+      return JSON.parse(localStorage.getItem('cart') || '{}');
+    }
+
+    function saveCart(cart) {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function addToCart(hatId, stockQuantity) {
+      const cart = getCart();
+      const nextQty = (cart[hatId] || 0) + 1;
+      const capped = nextQty > stockQuantity;
+      cart[hatId] = Math.min(nextQty, stockQuantity);
+      saveCart(cart);
+      return capped ? 'capped' : 'added';
+    }
+
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function getHatIdFromPath() {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      return parts[parts.length - 1];
+    }
+
+    async function loadHatDetail() {
+      const container = document.getElementById('hatDetailContent');
+      const hatId = getHatIdFromPath();
+
+      try {
+        const res = await fetch(`/api/hats/${hatId}`);
+        if (!res.ok) throw new Error('not found');
+        const hat = await res.json();
+        renderHatDetail(hat);
+      } catch (err) {
+        container.innerHTML = `
+          <div class="hat-detail-notfound">
+            <p>Sorry, we couldn't find that hat.</p>
+            <a href="/showroom" class="button">Back to Shop</a>
+          </div>
+        `;
+      }
+    }
+
+    function renderHatDetail(hat) {
+      const container = document.getElementById('hatDetailContent');
+      const outOfStock = hat.stock_quantity <= 0;
+
+      const price = hat.price.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0
+      });
+
+      container.innerHTML = `
+        <div class="hat-detail-card">
+          <div class="hat-detail-image ${outOfStock ? 'out-of-stock' : ''}">
+            <img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" />
+            ${outOfStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
+          </div>
+          <div class="hat-detail-info">
+            <h2 class="hat-detail-name">${hat.name}</h2>
+            <p class="hat-detail-price">${price}</p>
+            <dl class="hat-detail-specs">
+              ${hat.brand ? `<dt>Brand</dt><dd>${hat.brand}</dd>` : ''}
+              ${hat.category ? `<dt>Category</dt><dd>${hat.category}</dd>` : ''}
+            </dl>
+            <button id="detailAddToCart" class="button add-to-cart-btn" ${outOfStock ? 'disabled' : ''}>
+              ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
+            </button>
+            <a href="/showroom" class="back-to-shop-link">&larr; Back to Shop</a>
+          </div>
+        </div>
+      `;
+
+      if (!outOfStock) {
+        document.getElementById('detailAddToCart').addEventListener('click', () => {
+          const result = addToCart(hat.id, hat.stock_quantity);
+          if (result === 'capped') {
+            showToast(`Only ${hat.stock_quantity} of "${hat.name}" in stock`);
+          } else {
+            showToast(`${hat.name} added to cart`);
+          }
+        });
+      }
+    }
+
+    loadHatDetail();
+  </script>
+</body>
+</html>

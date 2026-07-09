@@ -151,10 +151,39 @@ def get_hats(
     ]
 
 
+# GET a single hat's details
+@app.get("/api/hats/{hat_id}")
+def get_hat(hat_id: int, db: Session = Depends(get_db)):
+    hat = db.get(Hat, hat_id)
+    if not hat or not hat.is_available:
+        raise HTTPException(status_code=404, detail="Hat not found")
+
+    return {
+        "id": hat.id,
+        "name": hat.name,
+        "brand": hat.brand,
+        "price": hat.price,
+        "description": hat.description,
+        "category": hat.category,
+        "size": hat.size,
+        "color": hat.color,
+        "material": hat.material,
+        "image_url": hat.image_url,
+        "stock_quantity": hat.stock_quantity,
+        "is_available": hat.is_available
+    }
+
+
 # GET showroom page
 @app.get("/showroom", response_class=HTMLResponse)
 def get_showroom_page(request: Request):
     return templates.TemplateResponse("showroom.html", {"request": request})
+
+
+# GET hat detail page
+@app.get("/hat/{hat_id}", response_class=HTMLResponse)
+def get_hat_detail_page(hat_id: int, request: Request):
+    return templates.TemplateResponse("hat_detail.html", {"request": request})
 
 
 # POST add hat to database
