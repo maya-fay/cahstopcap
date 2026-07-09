@@ -126,6 +126,8 @@
           `<option value="${s}" ${s === order.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`
         ).join('');
 
+        const fulfillmentLabel = order.fulfillment_type === 'delivery' ? 'Delivery' : 'Pickup';
+
         card.innerHTML = `
           <div class="order-card-header">
             <strong>#${order.id}</strong>
@@ -133,6 +135,10 @@
           </div>
           <p class="order-customer">${order.customer_name}</p>
           <p class="order-date">${createdDate}</p>
+          <p class="order-contact">${order.customer_email || ''}</p>
+          <p class="order-contact">${order.customer_phone || ''}</p>
+          ${order.instagram_handle ? `<p class="order-contact">${order.instagram_handle}</p>` : ''}
+          <p class="order-fulfillment">${fulfillmentLabel}${order.fulfillment_type === 'delivery' && order.delivery_address ? `: ${order.delivery_address}` : ''}</p>
           <ul class="order-items">${itemsHtml}</ul>
           <select class="order-status-select" data-order-id="${order.id}">${optionsHtml}</select>
         `;

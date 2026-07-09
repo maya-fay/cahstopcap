@@ -393,3 +393,32 @@ header {
   font-size: 1rem;
   padding: 3rem 2rem;
 }
+
+/* =========================================
+   TOAST
+   ========================================= */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translate(-50%, 20px);
+  background: darkred;
+  color: white;
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.7rem 1.4rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1000;
+  max-width: calc(100% - 2rem);
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

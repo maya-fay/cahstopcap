@@ -35,6 +35,11 @@ class Order(Base):
     
     id = Column(Integer, primary_key=True)
     customer_name = Column(String(100), nullable=False)
+    customer_email = Column(String(255))
+    customer_phone = Column(String(30))
+    instagram_handle = Column(String(100))
+    fulfillment_type = Column(String(20), nullable=False, default='pickup')
+    delivery_address = Column(Text)
     total_price = Column(DECIMAL(10, 2), nullable=False)
     status = Column(String(20), default='placed')
     created_at = Column(DateTime, default=datetime.utcnow)

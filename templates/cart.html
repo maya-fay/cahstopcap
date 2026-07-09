@@ -177,6 +177,33 @@
             Name for order
             <input type="text" id="customerName" placeholder="Your name" required />
           </label>
+          <label class="cart-name-label">
+            Email
+            <input type="email" id="customerEmail" placeholder="you@example.com" required />
+          </label>
+          <label class="cart-name-label">
+            Phone number
+            <input type="tel" id="customerPhone" placeholder="Your phone number" required />
+          </label>
+          <label class="cart-name-label">
+            Instagram handle <span class="cart-optional">(optional)</span>
+            <input type="text" id="instagramHandle" placeholder="@yourhandle" />
+          </label>
+          <div class="cart-fulfillment">
+            <span class="cart-fulfillment-label">Delivery or pickup?</span>
+            <div class="cart-fulfillment-options">
+              <label>
+                <input type="radio" name="fulfillmentType" value="pickup" checked /> Pickup
+              </label>
+              <label>
+                <input type="radio" name="fulfillmentType" value="delivery" /> Delivery
+              </label>
+            </div>
+          </div>
+          <label class="cart-name-label" id="addressField" style="display:none;">
+            Delivery address
+            <textarea id="deliveryAddress" placeholder="Street, city, parish"></textarea>
+          </label>
           <p class="cart-demo-note">Demo checkout — no real payment is processed.</p>
           <button id="placeOrderBtn" class="button place-order-btn" ${hasIssue ? 'disabled' : ''}>
             Place Order
@@ -184,6 +211,13 @@
           <p id="orderError" class="cart-row-warning" style="display:none;"></p>
         </div>
       `;
+
+      const addressField = document.getElementById('addressField');
+      document.querySelectorAll('input[name="fulfillmentType"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          addressField.style.display = radio.value === 'delivery' ? 'flex' : 'none';
+        });
+      });
 
       container.querySelectorAll('.cart-row').forEach(row => {
         const id = Number(row.dataset.hatId);
@@ -223,11 +257,33 @@
       const errorEl = document.getElementById('orderError');
       errorEl.style.display = 'none';
 
-      const nameInput = document.getElementById('customerName');
-      const customerName = nameInput.value.trim();
+      const customerName = document.getElementById('customerName').value.trim();
+      const customerEmail = document.getElementById('customerEmail').value.trim();
+      const customerPhone = document.getElementById('customerPhone').value.trim();
+      const instagramHandle = document.getElementById('instagramHandle').value.trim();
+      const fulfillmentType = document.querySelector('input[name="fulfillmentType"]:checked').value;
+      const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
 
       if (!customerName) {
         errorEl.textContent = 'Please enter your name.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (!customerEmail || !customerEmail.includes('@')) {
+        errorEl.textContent = 'Please enter a valid email.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (!customerPhone) {
+        errorEl.textContent = 'Please enter a phone number.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (fulfillmentType === 'delivery' && !deliveryAddress) {
+        errorEl.textContent = 'Please enter a delivery address.';
         errorEl.style.display = 'block';
         return;
       }
@@ -245,7 +301,15 @@
         const res = await fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ customer_name: customerName, items })
+          body: JSON.stringify({
+            customer_name: customerName,
+            customer_email: customerEmail,
+            customer_phone: customerPhone,
+            instagram_handle: instagramHandle || null,
+            fulfillment_type: fulfillmentType,
+            delivery_address: fulfillmentType === 'delivery' ? deliveryAddress : null,
+            items
+          })
         });
 
         const data = await res.json();

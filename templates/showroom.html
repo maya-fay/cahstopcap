@@ -66,6 +66,9 @@
     </div>
   </section>
 
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
   <!-- FOOTER -->
   <footer>
     <div class="footer-info">
@@ -154,7 +157,14 @@
         // Add to cart handler
         const cartBtn = card.querySelector('.cart-button');
         if (!outOfStock) {
-          cartBtn.addEventListener('click', () => addToCart(hat.id, hat.stock_quantity));
+          cartBtn.addEventListener('click', () => {
+            const result = addToCart(hat.id, hat.stock_quantity);
+            if (result === 'capped') {
+              showToast(`Only ${hat.stock_quantity} of "${hat.name}" in stock`);
+            } else {
+              showToast(`${hat.name} added to cart`);
+            }
+          });
         }
 
         if (outOfStock) {
@@ -195,8 +205,20 @@
     function addToCart(hatId, stockQuantity) {
       const cart = getCart();
       const nextQty = (cart[hatId] || 0) + 1;
+      const capped = nextQty > stockQuantity;
       cart[hatId] = Math.min(nextQty, stockQuantity);
       saveCart(cart);
+      return capped ? 'capped' : 'added';
+    }
+
+    // ── Toast ────────────────────────────────────────────────────────
+    let toastTimeout;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     // ── Init ─────────────────────────────────────────────────────────

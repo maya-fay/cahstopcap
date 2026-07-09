@@ -240,6 +240,19 @@ header.admin-header {
   color: #999;
 }
 
+.order-contact {
+  margin: 0.1rem 0;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.order-fulfillment {
+  margin: 0.3rem 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgb(119, 30, 30);
+}
+
 .order-items {
   margin: 0 0 0.6rem;
   padding-left: 1.1rem;

@@ -1,7 +1,9 @@
 import os
 import secrets
+import smtplib
+from email.mime.text import MIMEText
 
-from fastapi import Depends, FastAPI, Request, HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -30,6 +32,43 @@ app.add_middleware(
 )
 
 ORDER_STATUSES = ["placed", "processing", "out_for_delivery", "completed"]
+STATUS_LABELS = {
+    "placed": "Placed",
+    "processing": "Processing",
+    "out_for_delivery": "Out for Delivery",
+    "completed": "Completed",
+}
+FULFILLMENT_TYPES = ["pickup", "delivery"]
+
+GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+
+
+def send_status_email(to_email: str, customer_name: str, order_id: int, status: str):
+    if not to_email:
+        return
+
+    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
+        print(f"[email] GMAIL_ADDRESS/GMAIL_APP_PASSWORD not set — skipping email for order {order_id}")
+        return
+
+    label = STATUS_LABELS.get(status, status)
+    msg = MIMEText(
+        f"Hi {customer_name},\n\n"
+        f"Your CahStopCap order #{order_id} is now: {label}.\n\n"
+        f"Thanks for shopping with us!\n"
+    )
+    msg["Subject"] = f"CahStopCap Order #{order_id} — {label}"
+    msg["From"] = GMAIL_ADDRESS
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
+            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
+    except Exception as e:
+        print(f"[email] Failed to send status email for order {order_id}: {e}")
 
 # Mount static files (CSS, JS, images)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -148,6 +187,11 @@ class OrderItemIn(BaseModel):
 
 class OrderIn(BaseModel):
     customer_name: str
+    customer_email: str
+    customer_phone: str
+    instagram_handle: str | None = None
+    fulfillment_type: str
+    delivery_address: str | None = None
     items: list[OrderItemIn]
 
 
@@ -160,6 +204,26 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
     customer_name = order_in.customer_name.strip()
     if not customer_name:
         raise HTTPException(status_code=400, detail="Name is required")
+
+    customer_email = order_in.customer_email.strip()
+    if not customer_email or "@" not in customer_email:
+        raise HTTPException(status_code=400, detail="A valid email is required")
+
+    customer_phone = order_in.customer_phone.strip()
+    if not customer_phone:
+        raise HTTPException(status_code=400, detail="Phone number is required")
+
+    instagram_handle = (order_in.instagram_handle or "").strip() or None
+
+    fulfillment_type = order_in.fulfillment_type.strip().lower()
+    if fulfillment_type not in FULFILLMENT_TYPES:
+        raise HTTPException(status_code=400, detail=f"Fulfillment type must be one of {FULFILLMENT_TYPES}")
+
+    delivery_address = (order_in.delivery_address or "").strip()
+    if fulfillment_type == "delivery" and not delivery_address:
+        raise HTTPException(status_code=400, detail="Delivery address is required for delivery orders")
+    if fulfillment_type != "delivery":
+        delivery_address = None
 
     total_price = 0
     order_items = []
@@ -187,6 +251,11 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
 
     order = Order(
         customer_name=customer_name,
+        customer_email=customer_email,
+        customer_phone=customer_phone,
+        instagram_handle=instagram_handle,
+        fulfillment_type=fulfillment_type,
+        delivery_address=delivery_address,
         total_price=total_price,
         status="placed",
         items=order_items,
@@ -268,6 +337,11 @@ def admin_list_orders(
         {
             "id": o.id,
             "customer_name": o.customer_name,
+            "customer_email": o.customer_email,
+            "customer_phone": o.customer_phone,
+            "instagram_handle": o.instagram_handle,
+            "fulfillment_type": o.fulfillment_type,
+            "delivery_address": o.delivery_address,
             "total_price": float(o.total_price),
             "status": o.status,
             "created_at": o.created_at.isoformat(),
@@ -289,6 +363,7 @@ def admin_list_orders(
 def admin_update_order_status(
     order_id: int,
     body: OrderStatusUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     _owner=Depends(require_owner),
 ):
@@ -301,6 +376,10 @@ def admin_update_order_status(
 
     order.status = body.status
     db.commit()
+
+    background_tasks.add_task(
+        send_status_email, order.customer_email, order.customer_name, order.id, order.status
+    )
 
     return {"id": order.id, "status": order.status}
 
