@@ -270,6 +270,70 @@ header.admin-header {
 }
 
 /* =========================================
+   ADD HAT FORM
+   ========================================= */
+.hat-form-wrap {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.hat-form-wrap h3 {
+  font-family: 'Quantico', sans-serif;
+  color: rgb(119, 30, 30);
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.hat-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
+  align-items: end;
+}
+
+.hat-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-family: 'Quantico', sans-serif;
+  font-size: 0.8rem;
+  color: #333;
+}
+
+.hat-form input[type="text"],
+.hat-form input[type="number"] {
+  padding: 0.45rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.hat-form-checkbox {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem !important;
+}
+
+.required-marker {
+  color: darkred;
+}
+
+.hat-form .hat-save-btn {
+  height: fit-content;
+}
+
+.admin-form-error {
+  grid-column: 1 / -1;
+  color: darkred;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* =========================================
    HATS TABLE
    ========================================= */
 .hats-table-wrap {

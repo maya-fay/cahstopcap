@@ -47,6 +47,54 @@
 
     <!-- HATS TAB -->
     <section id="hatsTab" class="admin-tab-panel">
+      <div class="hat-form-wrap">
+        <h3>Add New Hat</h3>
+        <form id="addHatForm" class="hat-form">
+          <label>
+            Name <span class="required-marker">*</span>
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            Price <span class="required-marker">*</span>
+            <input type="number" name="price" min="0" step="0.01" required />
+          </label>
+          <label>
+            Brand
+            <input type="text" name="brand" />
+          </label>
+          <label>
+            Category
+            <input type="text" name="category" />
+          </label>
+          <label>
+            Size
+            <input type="text" name="size" />
+          </label>
+          <label>
+            Color
+            <input type="text" name="color" />
+          </label>
+          <label>
+            Material
+            <input type="text" name="material" />
+          </label>
+          <label>
+            Image URL
+            <input type="text" name="image_url" placeholder="static/assets/yourimage.jpg" />
+          </label>
+          <label>
+            Stock Quantity
+            <input type="number" name="stock_quantity" min="0" step="1" value="0" />
+          </label>
+          <label class="hat-form-checkbox">
+            <input type="checkbox" name="is_available" checked />
+            Available in store
+          </label>
+          <button type="submit" class="hat-save-btn">Add Hat</button>
+          <p id="addHatError" class="admin-form-error" style="display:none;"></p>
+        </form>
+      </div>
+
       <div class="hats-table-wrap">
         <table class="hats-table">
           <thead>
@@ -224,6 +272,67 @@
         btn.disabled = false;
       }
     }
+
+    // ── Add Hat ──────────────────────────────────────────────────────
+    document.getElementById('addHatForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const errorEl = document.getElementById('addHatError');
+      errorEl.style.display = 'none';
+
+      const name = form.name.value.trim();
+      const price = parseFloat(form.price.value);
+
+      if (!name) {
+        errorEl.textContent = 'Name is required.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (isNaN(price) || price < 0) {
+        errorEl.textContent = 'Please enter a valid price.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const payload = {
+        name,
+        price,
+        brand: form.brand.value.trim() || null,
+        category: form.category.value.trim() || null,
+        size: form.size.value.trim() || null,
+        color: form.color.value.trim() || null,
+        material: form.material.value.trim() || null,
+        image_url: form.image_url.value.trim() || null,
+        stock_quantity: parseInt(form.stock_quantity.value, 10) || 0,
+        is_available: form.is_available.checked,
+      };
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Adding...';
+
+      try {
+        const res = await apiFetch('/api/admin/hats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Could not add hat');
+
+        form.reset();
+        form.is_available.checked = true;
+        loadHats();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Hat';
+      }
+    });
 
     loadOrders();
     loadHats();

@@ -186,20 +186,6 @@ def get_hat_detail_page(hat_id: int, request: Request):
     return templates.TemplateResponse("hat_detail.html", {"request": request})
 
 
-# POST add hat to database
-@app.post("/api/hats")
-def create_hat(hat_data: dict, db: Session = Depends(get_db)):
-    hat = Hat(**hat_data)
-    db.add(hat)
-    db.commit()
-    db.refresh(hat)
-
-    return {
-        "message": "Hat created successfully",
-        "hat_id": hat.id
-    }
-
-
 # =========================================================
 # CART / CHECKOUT
 # =========================================================
@@ -417,6 +403,20 @@ def admin_update_order_status(
 # OWNER DASHBOARD — hats API
 # =========================================================
 
+class HatCreate(BaseModel):
+    name: str
+    price: float
+    brand: str | None = None
+    description: str | None = None
+    category: str | None = None
+    size: str | None = None
+    color: str | None = None
+    material: str | None = None
+    image_url: str | None = None
+    stock_quantity: int = 0
+    is_available: bool = True
+
+
 class HatUpdate(BaseModel):
     name: str | None = None
     price: float | None = None
@@ -441,6 +441,48 @@ def admin_list_hats(db: Session = Depends(get_db), _owner=Depends(require_owner)
         }
         for h in hats
     ]
+
+
+@app.post("/api/admin/hats")
+def admin_create_hat(
+    body: HatCreate,
+    db: Session = Depends(get_db),
+    _owner=Depends(require_owner),
+):
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+
+    if body.price < 0:
+        raise HTTPException(status_code=400, detail="Price cannot be negative")
+
+    if body.stock_quantity < 0:
+        raise HTTPException(status_code=400, detail="Stock cannot be negative")
+
+    hat = Hat(
+        name=name,
+        price=body.price,
+        brand=(body.brand or "").strip() or None,
+        description=(body.description or "").strip() or None,
+        category=(body.category or "").strip() or None,
+        size=(body.size or "").strip() or None,
+        color=(body.color or "").strip() or None,
+        material=(body.material or "").strip() or None,
+        image_url=(body.image_url or "").strip() or None,
+        stock_quantity=body.stock_quantity,
+        is_available=body.is_available,
+    )
+    db.add(hat)
+    db.commit()
+    db.refresh(hat)
+
+    return {
+        "id": hat.id,
+        "name": hat.name,
+        "price": hat.price,
+        "stock_quantity": hat.stock_quantity,
+        "is_available": hat.is_available,
+    }
 
 
 @app.patch("/api/admin/hats/{hat_id}")

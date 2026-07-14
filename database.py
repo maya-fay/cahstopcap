@@ -14,7 +14,7 @@ load_dotenv()
 # 3. SQLite fallback (no setup needed)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Create sessionmaker
 SessionLocal = sessionmaker(bind=engine)
