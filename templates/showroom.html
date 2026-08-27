@@ -32,7 +32,7 @@
 
   <!-- MARQUEE -->
   <div class="marquee">
-    <span> YDYS YOU DEFINE YOUR SWAG YDYS YOU DEFINE YOUR SWAG YDYS YOU DEFINE YOUR SWAG YDYS </span>
+    <span> YDYS | YOU DEFINE YOUR SWAG | YDYS | YOU DEFINE YOUR SWAG | YDYS | YOU DEFINE YOUR SWAG | YDYS </span>
   </div>
 
   <!-- SHOWROOM SECTION -->
@@ -40,13 +40,7 @@
     <h2 class="showroom-header">SHOWROOM</h2>
 
     <!-- Category Filter -->
-    <div class="filter-bar">
-      <button class="category-btn active" data-category="all">All Hats</button>
-      <button class="category-btn" data-category="snapback">Snapbacks</button>
-      <button class="category-btn" data-category="trucker">Trucker</button>
-      <button class="category-btn" data-category="beanies">Baseball Cap</button>
-      <button class="category-btn" data-category="caps">Strapback</button>
-    </div>
+    <div class="filter-bar" id="filterBar"></div>
 
     <!-- Cart bar -->
     <div class="cart-bar">
@@ -96,28 +90,58 @@
 
   <script>
     let activeCategory = 'all';
+    let allHats = [];
 
-    // ── Fetch hats from API and render ──────────────────────────────
-    async function loadHats(category) {
+    // ── Fetch all hats once, build filters from what's in stock ────────
+    async function initShowroom() {
       const grid = document.getElementById('hatGrid');
-      const noResults = document.getElementById('noResults');
-
       grid.innerHTML = '<p class="loading-state">Loading hats...</p>';
-      noResults.style.display = 'none';
 
       try {
-        const params = new URLSearchParams();
-        if (category && category !== 'all') params.set('category', category);
-
-        const res = await fetch(`/api/hats?${params.toString()}`);
+        const res = await fetch('/api/hats');
         if (!res.ok) throw new Error('Failed to fetch hats');
-
-        const hats = await res.json();
-        renderHats(hats);
+        allHats = await res.json();
       } catch (err) {
         grid.innerHTML = '<p class="loading-state">Could not load hats. Please try again.</p>';
         console.error(err);
+        return;
       }
+
+      renderFilterBar();
+      renderHats(filterHats(activeCategory));
+    }
+
+    function renderFilterBar() {
+      const bar = document.getElementById('filterBar');
+      const categories = [...new Set(
+        allHats.filter(h => h.stock_quantity > 0 && h.category).map(h => h.category)
+      )].sort((a, b) => a.localeCompare(b));
+
+      bar.innerHTML = '';
+      bar.appendChild(createCategoryButton('all', 'All Hats'));
+      categories.forEach(cat => {
+        const label = cat.charAt(0).toUpperCase() + cat.slice(1);
+        bar.appendChild(createCategoryButton(cat, label));
+      });
+    }
+
+    function createCategoryButton(category, label) {
+      const btn = document.createElement('button');
+      btn.className = 'category-btn' + (category === activeCategory ? ' active' : '');
+      btn.dataset.category = category;
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeCategory = category;
+        renderHats(filterHats(activeCategory));
+      });
+      return btn;
+    }
+
+    function filterHats(category) {
+      if (!category || category === 'all') return allHats;
+      return allHats.filter(h => h.category === category);
     }
 
     function renderHats(hats) {
@@ -182,16 +206,6 @@
       });
     }
 
-    // ── Category filter buttons ──────────────────────────────────────
-    document.querySelectorAll('.category-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeCategory = btn.dataset.category;
-        loadHats(activeCategory);
-      });
-    });
-
     // ── Cart ─────────────────────────────────────────────────────────
     function resolveImagePath(url) {
       if (!url) return '/static/assets/placeholder.jpg';
@@ -230,7 +244,7 @@
 
     // ── Init ─────────────────────────────────────────────────────────
     saveCart(getCart());
-    loadHats('all');
+    initShowroom();
   </script>
 </body>
 </html>
