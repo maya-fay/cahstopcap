@@ -339,14 +339,16 @@ nav a {
 }
 
 .about-image {
-  padding: 20px 35px 20px 0;
+  padding: 20px;
   flex: 1 1 50%;
   box-sizing: border-box;
+  display: flex;
+  justify-content: center;
 }
 
 .about-text {
   flex: 1 1 50%;
-  padding: 20px 35px 20px 0;
+  padding: 20px;
   box-sizing: border-box;
 }
 
@@ -355,6 +357,7 @@ nav a {
   height: auto;
   border-radius: 8px;
   object-fit: cover;
+  display: block;
 }
 
 .about-text h2 {
