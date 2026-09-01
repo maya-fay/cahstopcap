@@ -211,6 +211,18 @@
             Delivery address
             <textarea id="deliveryAddress" placeholder="Street, city, parish"></textarea>
           </label>
+          <div class="cart-fulfillment">
+            <span class="cart-fulfillment-label">Payment method</span>
+            <div class="cart-fulfillment-options">
+              <label>
+                <input type="radio" name="paymentMethod" value="bank_transfer" checked /> Bank Transfer
+              </label>
+              <label id="codLabel" class="payment-option-disabled">
+                <input type="radio" name="paymentMethod" value="cash_on_delivery" id="codRadio" disabled /> Cash on Delivery
+              </label>
+            </div>
+            <p class="cart-optional" id="codHint">Cash on delivery is only available for delivery orders.</p>
+          </div>
           <p class="cart-demo-note">Demo checkout — no real payment is processed.</p>
           <button id="placeOrderBtn" class="button place-order-btn" ${hasIssue ? 'disabled' : ''}>
             Place Order
@@ -220,9 +232,21 @@
       `;
 
       const addressField = document.getElementById('addressField');
+      const codRadio = document.getElementById('codRadio');
+      const codLabel = document.getElementById('codLabel');
+      const bankRadio = document.querySelector('input[name="paymentMethod"][value="bank_transfer"]');
+
       document.querySelectorAll('input[name="fulfillmentType"]').forEach(radio => {
         radio.addEventListener('change', () => {
-          addressField.style.display = radio.value === 'delivery' ? 'flex' : 'none';
+          const isDelivery = radio.value === 'delivery';
+          addressField.style.display = isDelivery ? 'flex' : 'none';
+
+          codRadio.disabled = !isDelivery;
+          codLabel.classList.toggle('payment-option-disabled', !isDelivery);
+          if (!isDelivery && codRadio.checked) {
+            codRadio.checked = false;
+            bankRadio.checked = true;
+          }
         });
       });
 
@@ -270,6 +294,7 @@
       const instagramHandle = document.getElementById('instagramHandle').value.trim();
       const fulfillmentType = document.querySelector('input[name="fulfillmentType"]:checked').value;
       const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
+      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
 
       if (!customerName) {
         errorEl.textContent = 'Please enter your name.';
@@ -315,6 +340,7 @@
             instagram_handle: instagramHandle || null,
             fulfillment_type: fulfillmentType,
             delivery_address: fulfillmentType === 'delivery' ? deliveryAddress : null,
+            payment_method: paymentMethod,
             items
           })
         });
@@ -336,17 +362,138 @@
     }
 
     function renderConfirmation(order) {
+      const marquee = document.querySelector('.marquee');
+      if (marquee) marquee.style.display = 'none';
+
       const container = document.getElementById('cartContent');
       const totalStr = order.total_price.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+
+      const itemRows = order.items.map(item => {
+        const lineTotal = item.price * item.quantity;
+        const lineTotalStr = lineTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+        return `
+          <div class="order-preview-row">
+            <img src="${resolveImagePath(item.hat_image)}" alt="${item.hat_name}" class="order-preview-image" />
+            <div class="order-preview-info">
+              <h4>${item.hat_name}</h4>
+              <p>Qty: ${item.quantity}</p>
+            </div>
+            <div class="order-preview-amount">${lineTotalStr}</div>
+          </div>
+        `;
+      }).join('');
 
       container.innerHTML = `
         <div class="cart-confirmation">
           <h3>Order placed!</h3>
-          <p>Thanks, ${order.customer_name} — order #${order.id} has been placed.</p>
-          <p>Total: ${totalStr}</p>
+          <p>Thanks, ${order.customer_name} — your order has been placed.</p>
+
+          <div class="order-preview">${itemRows}</div>
+          <div class="order-preview-total">
+            <span>Total</span>
+            <span>${totalStr}</span>
+          </div>
+
+          <div id="bankTransferSection"></div>
+
           <a href="/showroom" class="button">Continue Shopping</a>
         </div>
       `;
+
+      if (order.payment_method === 'bank_transfer') {
+        renderBankTransferForm(order);
+      }
+    }
+
+    function renderBankTransferForm(order) {
+      const section = document.getElementById('bankTransferSection');
+
+      section.innerHTML = `
+        <div class="bank-transfer-card">
+          <h4>Get Bank Transfer Details</h4>
+          <p>Choose where to send the bank details.</p>
+          <div class="cart-fulfillment-options bank-channel-options">
+            <label>
+              <input type="radio" name="bankChannel" value="email" checked /> Email
+            </label>
+            <label>
+              <input type="radio" name="bankChannel" value="phone" /> Text
+            </label>
+          </div>
+          <label class="cart-name-label">
+            <span id="bankContactLabel">Email</span>
+            <input type="text" id="bankContactInput" value="${order.customer_email || ''}" />
+          </label>
+          <button id="sendBankDetailsBtn" class="button">Send Details</button>
+          <p id="bankDetailsError" class="cart-row-warning" style="display:none;"></p>
+        </div>
+      `;
+
+      const contactInput = document.getElementById('bankContactInput');
+      const contactLabel = document.getElementById('bankContactLabel');
+
+      document.querySelectorAll('input[name="bankChannel"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (radio.checked && radio.value === 'email') {
+            contactLabel.textContent = 'Email';
+            contactInput.value = order.customer_email || '';
+            contactInput.type = 'email';
+          } else if (radio.checked) {
+            contactLabel.textContent = 'Phone number';
+            contactInput.value = order.customer_phone || '';
+            contactInput.type = 'tel';
+          }
+        });
+      });
+
+      document.getElementById('sendBankDetailsBtn').addEventListener('click', () => {
+        const channel = document.querySelector('input[name="bankChannel"]:checked').value;
+        const contact = contactInput.value.trim();
+        const errorEl = document.getElementById('bankDetailsError');
+        errorEl.style.display = 'none';
+
+        if (!contact) {
+          errorEl.textContent = 'Please enter a phone number or email.';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        sendBankDetails(order, channel, contact);
+      });
+    }
+
+    async function sendBankDetails(order, channel, contact) {
+      const section = document.getElementById('bankTransferSection');
+      section.innerHTML = `
+        <div class="bank-transfer-card">
+          <p class="loading-state">Sending bank details...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`/api/orders/${order.id}/send-bank-details`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channel, contact })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Could not send bank details');
+
+        section.innerHTML = `
+          <div class="bank-transfer-card">
+            <p class="bank-details-sent">Bank details sent. Order processing will begin upon receipt of payment.</p>
+          </div>
+        `;
+      } catch (err) {
+        section.innerHTML = `
+          <div class="bank-transfer-card">
+            <p class="cart-row-warning">${err.message}</p>
+            <button id="retryBankDetailsBtn" class="button">Try Again</button>
+          </div>
+        `;
+        document.getElementById('retryBankDetailsBtn').addEventListener('click', () => renderBankTransferForm(order));
+      }
     }
 
     loadCart();

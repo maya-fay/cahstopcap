@@ -1,9 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, Text, Boolean, DateTime, ForeignKey, DECIMAL
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
-Base = declarative_base()
+from database import Base
 
 class Hat(Base):
     __tablename__ = "hats"
@@ -40,6 +39,7 @@ class Order(Base):
     instagram_handle = Column(String(100))
     fulfillment_type = Column(String(20), nullable=False, default='pickup')
     delivery_address = Column(Text)
+    payment_method = Column(String(20), nullable=False, default='cash_on_delivery')
     total_price = Column(DECIMAL(10, 2), nullable=False)
     status = Column(String(20), default='placed')
     created_at = Column(DateTime, default=datetime.utcnow)

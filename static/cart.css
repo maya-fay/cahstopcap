@@ -215,6 +215,14 @@
   font-style: italic;
 }
 
+.payment-option-disabled {
+  opacity: 0.5;
+}
+
+.payment-option-disabled input {
+  cursor: not-allowed;
+}
+
 .cart-confirmation {
   text-align: center;
   color: #333;
@@ -228,6 +236,94 @@
   color: rgb(119, 30, 30);
   font-size: 1.8rem;
   margin-top: 0;
+}
+
+.order-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+.order-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.6rem;
+}
+
+.order-preview-image {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.order-preview-info {
+  flex: 1;
+}
+
+.order-preview-info h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.9rem;
+  color: #111;
+}
+
+.order-preview-info p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.order-preview-amount {
+  font-weight: 700;
+  color: rgb(119, 30, 30);
+}
+
+.order-preview-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #111;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #ddd;
+}
+
+.bank-transfer-card {
+  text-align: left;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.bank-transfer-card h4 {
+  margin: 0;
+  color: rgb(119, 30, 30);
+}
+
+.bank-transfer-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.bank-channel-options {
+  gap: 1.5rem;
+}
+
+.bank-details-sent {
+  color: #1a7a1a;
+  font-weight: 700;
 }
 
 @media (max-width: 600px) {

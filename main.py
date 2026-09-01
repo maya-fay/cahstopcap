@@ -1,6 +1,9 @@
 import os
 import secrets
 import smtplib
+import base64
+import urllib.request
+import urllib.parse
 from email.mime.text import MIMEText
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException
@@ -39,9 +42,31 @@ STATUS_LABELS = {
     "completed": "Completed",
 }
 FULFILLMENT_TYPES = ["pickup", "delivery"]
+PAYMENT_METHODS = ["bank_transfer", "cash_on_delivery"]
 
 GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
+
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
+
+# TODO: replace with the real bank details.
+BANK_TRANSFER_DETAILS = (
+    "Bank: [BANK NAME]\n"
+    "Account Name: [ACCOUNT NAME]\n"
+    "Account Number: [ACCOUNT NUMBER]\n"
+    "Branch: [BRANCH]"
+)
+
+
+def build_bank_details_message(customer_name: str) -> str:
+    return (
+        f"Hi {customer_name}, to complete your order, send payment to the following bank details:\n\n"
+        f"{BANK_TRANSFER_DETAILS}\n\n"
+        "Reply to this message with proof of payment.\n\n"
+        "Thanks for shopping!"
+    )
 
 
 def send_status_email(to_email: str, customer_name: str, order_id: int, status: str):
@@ -69,6 +94,39 @@ def send_status_email(to_email: str, customer_name: str, order_id: int, status: 
             server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
     except Exception as e:
         print(f"[email] Failed to send status email for order {order_id}: {e}")
+
+
+def send_bank_details_email(to_email: str, customer_name: str, order_id: int):
+    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
+        print(f"[email] GMAIL_ADDRESS/GMAIL_APP_PASSWORD not set — skipping bank details email for order {order_id}")
+        return
+
+    msg = MIMEText(build_bank_details_message(customer_name))
+    msg["Subject"] = f"CahStopCap Order #{order_id} — Bank Transfer Details"
+    msg["From"] = GMAIL_ADDRESS
+    msg["To"] = to_email
+
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+        server.starttls()
+        server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+        server.sendmail(GMAIL_ADDRESS, [to_email], msg.as_string())
+
+
+def send_bank_details_sms(to_phone: str, customer_name: str, order_id: int):
+    if not (TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER):
+        print(f"[sms] TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_FROM_NUMBER not set — skipping bank details text for order {order_id}")
+        return
+
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
+    data = urllib.parse.urlencode({
+        "From": TWILIO_FROM_NUMBER,
+        "To": to_phone,
+        "Body": build_bank_details_message(customer_name),
+    }).encode()
+
+    auth = base64.b64encode(f"{TWILIO_ACCOUNT_SID}:{TWILIO_AUTH_TOKEN}".encode()).decode()
+    req = urllib.request.Request(url, data=data, headers={"Authorization": f"Basic {auth}"})
+    urllib.request.urlopen(req, timeout=10)
 
 # Mount static files (CSS, JS, images)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -207,6 +265,7 @@ class OrderIn(BaseModel):
     instagram_handle: str | None = None
     fulfillment_type: str
     delivery_address: str | None = None
+    payment_method: str
     items: list[OrderItemIn]
 
 
@@ -240,6 +299,12 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
     if fulfillment_type != "delivery":
         delivery_address = None
 
+    payment_method = order_in.payment_method.strip().lower()
+    if payment_method not in PAYMENT_METHODS:
+        raise HTTPException(status_code=400, detail=f"Payment method must be one of {PAYMENT_METHODS}")
+    if payment_method == "cash_on_delivery" and fulfillment_type != "delivery":
+        raise HTTPException(status_code=400, detail="Cash on delivery is only available for delivery orders")
+
     total_price = 0
     order_items = []
 
@@ -271,6 +336,7 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
         instagram_handle=instagram_handle,
         fulfillment_type=fulfillment_type,
         delivery_address=delivery_address,
+        payment_method=payment_method,
         total_price=total_price,
         status="placed",
         items=order_items,
@@ -282,10 +348,63 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
     return {
         "id": order.id,
         "customer_name": order.customer_name,
+        "customer_email": order.customer_email,
+        "customer_phone": order.customer_phone,
+        "fulfillment_type": order.fulfillment_type,
+        "payment_method": order.payment_method,
         "total_price": float(order.total_price),
         "status": order.status,
         "created_at": order.created_at.isoformat(),
+        "items": [
+            {
+                "hat_id": i.hat_id,
+                "hat_name": i.hat.name if i.hat else "Deleted hat",
+                "hat_image": i.hat.image_url if i.hat else None,
+                "quantity": i.quantity,
+                "price": float(i.price),
+            }
+            for i in order.items
+        ],
     }
+
+
+class BankDetailsRequest(BaseModel):
+    channel: str
+    contact: str
+
+
+# POST send bank transfer details to the customer by email or text
+@app.post("/api/orders/{order_id}/send-bank-details")
+def send_bank_details(order_id: int, body: BankDetailsRequest, db: Session = Depends(get_db)):
+    order = db.get(Order, order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.payment_method != "bank_transfer":
+        raise HTTPException(status_code=400, detail="This order is not paying by bank transfer")
+
+    channel = body.channel.strip().lower()
+    if channel not in ("email", "phone"):
+        raise HTTPException(status_code=400, detail="Channel must be 'email' or 'phone'")
+
+    contact = body.contact.strip()
+    if not contact:
+        raise HTTPException(status_code=400, detail="Please provide a phone number or email")
+
+    try:
+        if channel == "email":
+            if "@" not in contact:
+                raise HTTPException(status_code=400, detail="Please enter a valid email")
+            send_bank_details_email(contact, order.customer_name, order.id)
+        else:
+            send_bank_details_sms(contact, order.customer_name, order.id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[bank-details] Failed to send via {channel} for order {order_id}: {e}")
+        raise HTTPException(status_code=502, detail="Could not send bank details right now. Please try again.")
+
+    return {"success": True, "channel": channel}
 
 
 # =========================================================
