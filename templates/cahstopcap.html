@@ -62,6 +62,9 @@
 
       <span class="header-text"><a href="#contact">Contact</a></span>
       <span class="header-icon"><img src="/static/assets/contact.png"></span>
+
+      <span class="header-text"><a href="/cart" class="nav-cart-link">Cart <span class="cart-count-badge">0</span></a></span>
+      <span class="header-icon"><a href="/cart" class="nav-cart-link"><span class="cart-emoji">🛒</span><span class="cart-count-badge">0</span></a></span>
     </nav>
   </header>
 
@@ -250,6 +253,12 @@
 
       function saveCart(cart) {
         localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartBadge(cart);
+      }
+
+      function updateCartBadge(cart) {
+        const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+        document.querySelectorAll('.cart-count-badge').forEach(el => el.textContent = count);
       }
 
       function addToCart(hatId, stockQuantity) {
@@ -338,6 +347,7 @@
         });
       }
 
+      updateCartBadge(getCart());
       loadHomeHats();
     </script>
 </body>

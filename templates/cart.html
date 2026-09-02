@@ -25,6 +25,10 @@
         <span class="nav-text"><a href="/contact">Contact</a></span>
         <span class="nav-icon"><a href="/contact"><img src="/static/assets/contact.png" alt="Contact"></a></span>
       </div>
+      <div class="nav-item" id="cartNavItem">
+        <span class="nav-text"><a href="/cart" class="nav-cart-link">Cart <span class="cart-count-badge">0</span></a></span>
+        <span class="nav-icon"><a href="/cart" class="nav-cart-link"><span class="cart-emoji">🛒</span><span class="cart-count-badge">0</span></a></span>
+      </div>
     </nav>
     <div class="header-logo">
       <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo"></a>
@@ -83,6 +87,8 @@
 
     function saveCart(cart) {
       localStorage.setItem('cart', JSON.stringify(cart));
+      const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+      document.querySelectorAll('.cart-count-badge').forEach(el => el.textContent = count);
     }
 
     function cartCount(cart) {
@@ -365,6 +371,9 @@
       const marquee = document.querySelector('.marquee');
       if (marquee) marquee.style.display = 'none';
 
+      const cartNavItem = document.getElementById('cartNavItem');
+      if (cartNavItem) cartNavItem.style.display = 'none';
+
       const container = document.getElementById('cartContent');
       const totalStr = order.total_price.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
 
@@ -496,6 +505,7 @@
       }
     }
 
+    saveCart(getCart());
     loadCart();
   </script>
 </body>
