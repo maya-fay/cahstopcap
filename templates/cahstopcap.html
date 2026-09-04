@@ -76,48 +76,15 @@
       <button class="carousel-btn prev">❮</button> 
       <button class="carousel-btn next">❯</button>
       <div class="carousel-track">
+        {% for slide in slides %}
         <div class="carousel-slide">
-          <img src="/static/assets/cahstop-caps-at-river.jpg" alt="Hat 1">
+          <img src="{{ slide.image_url if (slide.image_url.startswith('http') or slide.image_url.startswith('/')) else '/' + slide.image_url }}" alt="{{ slide.title }}">
           <div class="caption">
-            <h2>CAHSTOPCAP</h2>
-            <button>Shop Now</button>
+            <h2>{{ slide.title }}</h2>
+            <a class="caption-btn" href="{{ slide.button_link }}">{{ slide.button_text }}</a>
           </div>
         </div>
-        <div class="carousel-slide">
-          <img src="/static/assets/gennow.jpg" alt="Hat 2">
-          <div class="caption">
-            <h2>GENNOW</h2>
-            <button>Playlist</button>
-          </div>
-        </div>
-        <div class="carousel-slide">
-          <img src="/static/assets/rrwndz.jpg" alt="Hat 3">
-          <div class="caption">
-            <h2>Never Miss RRWNZDZ</h2>
-            <button>Check It Out</button>
-          </div>
-        </div>
-        <div class="carousel-slide">
-          <img src="/static/assets/ydys.jpg" alt="Hat 4">
-          <div class="caption">
-            <h2>YDYS</h2>
-            <button>Shop Now</button>
-          </div>
-        </div>
-        <div class="carousel-slide">
-          <img src="/static/assets/collabs.jpg" alt="Hat 5">
-          <div class="caption">
-            <h2>COLLABS</h2>
-            <button>Shop Now</button>
-          </div>
-        </div>
-        <div class="carousel-slide">
-          <img src="/static/assets/caps-on-sti.jpg" alt="Hat 6">
-          <div class="caption">
-            <h2>CAHSTOPCAP</h2>
-            <button>Shop Now</button>
-          </div>
-        </div>
+        {% endfor %}
       </div>
 
       <!-- Slider dots -->

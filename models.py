@@ -22,6 +22,18 @@ class Hat(Base):
 
     order_items = relationship("OrderItem", back_populates="hat")
 
+class CarouselSlide(Base):
+    __tablename__ = "carousel_slides"
+
+    id = Column(Integer, primary_key=True)
+    image_url = Column(String(255), nullable=False)
+    title = Column(String(100), nullable=False)
+    button_text = Column(String(50), nullable=False, default="Shop Now")
+    button_link = Column(String(255), nullable=False, default="/showroom")
+    sort_order = Column(Integer, default=0, nullable=False)
+    is_active = Column(Boolean, default=True)
+
+
 class Category(Base):
     __tablename__ = "categories"
     

@@ -182,7 +182,8 @@ nav a {
   font-size: 1.8rem;
 }
 
-.caption button {
+.caption button,
+.caption .caption-btn {
   background: #fff;
   color: #000;
   padding: 8px 20px;
@@ -190,9 +191,12 @@ nav a {
   font-size: 0.9rem;
   cursor: pointer;
   border-radius: 4px;
+  display: inline-block;
+  text-decoration: none;
 }
 
-.caption button:hover {
+.caption button:hover,
+.caption .caption-btn:hover {
   background: #f0f0f0;
 }
 

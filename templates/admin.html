@@ -20,6 +20,7 @@
   <nav class="admin-tabs">
     <button class="admin-tab-btn active" data-tab="orders">Orders</button>
     <button class="admin-tab-btn" data-tab="hats">Hats</button>
+    <button class="admin-tab-btn" data-tab="carousel">Carousel</button>
   </nav>
 
   <main class="admin-main">
@@ -110,6 +111,61 @@
           </thead>
           <tbody id="hatsTableBody">
             <tr><td colspan="7" class="admin-loading">Loading hats...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CAROUSEL TAB -->
+    <section id="carouselTab" class="admin-tab-panel">
+      <div class="hat-form-wrap">
+        <h3>Add New Slide</h3>
+        <form id="addSlideForm" class="hat-form">
+          <label>
+            Image Path <span class="required-marker">*</span>
+            <input type="text" name="image_url" placeholder="static/assets/yourimage.jpg" required />
+          </label>
+          <label>
+            Large Text (Title) <span class="required-marker">*</span>
+            <input type="text" name="title" required />
+          </label>
+          <label>
+            Button Text
+            <input type="text" name="button_text" placeholder="Shop Now" />
+          </label>
+          <label>
+            Button Link
+            <input type="text" name="button_link" placeholder="/showroom" />
+          </label>
+          <label>
+            Sort Order
+            <input type="number" name="sort_order" step="1" value="0" />
+          </label>
+          <label class="hat-form-checkbox">
+            <input type="checkbox" name="is_active" checked />
+            Active on homepage
+          </label>
+          <button type="submit" class="hat-save-btn">Add Slide</button>
+          <p id="addSlideError" class="admin-form-error" style="display:none;"></p>
+        </form>
+      </div>
+
+      <div class="hats-table-wrap">
+        <table class="hats-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Image Path</th>
+              <th>Title</th>
+              <th>Button Text</th>
+              <th>Button Link</th>
+              <th>Order</th>
+              <th>Active</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="carouselTableBody">
+            <tr><td colspan="8" class="admin-loading">Loading slides...</td></tr>
           </tbody>
         </table>
       </div>
@@ -334,8 +390,143 @@
       }
     });
 
+    // ── Carousel ─────────────────────────────────────────────────────
+    async function loadCarousel() {
+      const res = await apiFetch('/api/admin/carousel');
+      const slides = await res.json();
+      const tbody = document.getElementById('carouselTableBody');
+      tbody.innerHTML = '';
+
+      slides.forEach(slide => {
+        const tr = document.createElement('tr');
+        tr.dataset.slideId = slide.id;
+
+        tr.innerHTML = `
+          <td><img src="${resolveImagePath(slide.image_url)}" alt="${slide.title}" class="hats-table-image" /></td>
+          <td><input type="text" class="hat-field" data-field="image_url" value="${slide.image_url}" /></td>
+          <td><input type="text" class="hat-field" data-field="title" value="${slide.title}" /></td>
+          <td><input type="text" class="hat-field" data-field="button_text" value="${slide.button_text}" /></td>
+          <td><input type="text" class="hat-field" data-field="button_link" value="${slide.button_link}" /></td>
+          <td><input type="number" class="hat-field" data-field="sort_order" value="${slide.sort_order}" step="1" /></td>
+          <td><input type="checkbox" class="hat-field" data-field="is_active" ${slide.is_active ? 'checked' : ''} /></td>
+          <td>
+            <button class="hat-save-btn">Save</button>
+            <button type="button" class="hat-save-btn slide-delete-btn">Delete</button>
+          </td>
+        `;
+
+        tr.querySelector('.hat-save-btn').addEventListener('click', () => saveSlide(slide.id, tr));
+        tr.querySelector('.slide-delete-btn').addEventListener('click', () => deleteSlide(slide.id));
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveSlide(slideId, row) {
+      const payload = {
+        image_url: row.querySelector('[data-field="image_url"]').value,
+        title: row.querySelector('[data-field="title"]').value,
+        button_text: row.querySelector('[data-field="button_text"]').value,
+        button_link: row.querySelector('[data-field="button_link"]').value,
+        sort_order: parseInt(row.querySelector('[data-field="sort_order"]').value, 10),
+        is_active: row.querySelector('[data-field="is_active"]').checked
+      };
+
+      const btn = row.querySelector('.hat-save-btn');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
+
+      try {
+        const res = await apiFetch(`/api/admin/carousel/${slideId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.detail || 'Could not save slide');
+        }
+
+        btn.textContent = 'Saved';
+        setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 1200);
+        loadCarousel();
+      } catch (err) {
+        alert(err.message);
+        btn.textContent = 'Save';
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteSlide(slideId) {
+      if (!confirm('Delete this carousel slide?')) return;
+
+      const res = await apiFetch(`/api/admin/carousel/${slideId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        alert('Could not delete slide.');
+      }
+      loadCarousel();
+    }
+
+    document.getElementById('addSlideForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const errorEl = document.getElementById('addSlideError');
+      errorEl.style.display = 'none';
+
+      const image_url = form.image_url.value.trim();
+      const title = form.title.value.trim();
+
+      if (!image_url) {
+        errorEl.textContent = 'Image path is required.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (!title) {
+        errorEl.textContent = 'Title is required.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const payload = {
+        image_url,
+        title,
+        button_text: form.button_text.value.trim() || 'Shop Now',
+        button_link: form.button_link.value.trim() || '/showroom',
+        sort_order: parseInt(form.sort_order.value, 10) || 0,
+        is_active: form.is_active.checked,
+      };
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Adding...';
+
+      try {
+        const res = await apiFetch('/api/admin/carousel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Could not add slide');
+
+        form.reset();
+        form.is_active.checked = true;
+        loadCarousel();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Slide';
+      }
+    });
+
     loadOrders();
     loadHats();
+    loadCarousel();
   </script>
 </body>
 </html>

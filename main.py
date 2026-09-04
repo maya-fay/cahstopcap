@@ -5,6 +5,8 @@ import base64
 import urllib.request
 import urllib.parse
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -18,7 +20,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
-from models import Hat, Category, Order, OrderItem
+from models import Hat, Category, Order, OrderItem, CarouselSlide
 
 from database import engine, SessionLocal, Base, get_db
 app = FastAPI()
@@ -44,12 +46,15 @@ STATUS_LABELS = {
 FULFILLMENT_TYPES = ["pickup", "delivery"]
 PAYMENT_METHODS = ["bank_transfer", "cash_on_delivery"]
 
-GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
+GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS", "cahstopcap@gmail.com")
 GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
 
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_FROM_NUMBER = os.getenv("TWILIO_FROM_NUMBER")
+
+BUSINESS_INSTAGRAM_HANDLE = "@cahstopcap"
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "static", "logo-email.png")
 
 # TODO: replace with the real bank details.
 BANK_TRANSFER_DETAILS = (
@@ -73,8 +78,8 @@ def send_status_email(to_email: str, customer_name: str, order_id: int, status: 
     if not to_email:
         return
 
-    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
-        print(f"[email] GMAIL_ADDRESS/GMAIL_APP_PASSWORD not set — skipping email for order {order_id}")
+    if not GMAIL_APP_PASSWORD:
+        print(f"[email] GMAIL_APP_PASSWORD not set — skipping email for order {order_id}")
         return
 
     label = STATUS_LABELS.get(status, status)
@@ -96,15 +101,78 @@ def send_status_email(to_email: str, customer_name: str, order_id: int, status: 
         print(f"[email] Failed to send status email for order {order_id}: {e}")
 
 
-def send_bank_details_email(to_email: str, customer_name: str, order_id: int):
-    if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
-        print(f"[email] GMAIL_ADDRESS/GMAIL_APP_PASSWORD not set — skipping bank details email for order {order_id}")
+def send_bank_details_email(to_email: str, order: Order):
+    if not GMAIL_APP_PASSWORD:
+        print(f"[email] GMAIL_APP_PASSWORD not set — skipping bank details email for order {order.id}")
         return
 
-    msg = MIMEText(build_bank_details_message(customer_name))
-    msg["Subject"] = f"CahStopCap Order #{order_id} — Bank Transfer Details"
+    item_lines = []
+    item_rows_html = []
+    for item in order.items:
+        name = item.hat.name if item.hat else "Item"
+        line_total = float(item.price) * item.quantity
+        item_lines.append(f"- {name} x{item.quantity} — ${line_total:,.2f}")
+        item_rows_html.append(
+            f"<tr><td style='padding:4px 8px;'>{name}</td>"
+            f"<td style='padding:4px 8px;text-align:center;'>{item.quantity}</td>"
+            f"<td style='padding:4px 8px;text-align:right;'>${line_total:,.2f}</td></tr>"
+        )
+    total = float(order.total_price)
+
+    text_body = (
+        f"Hi {order.customer_name},\n\n"
+        "Thanks for your order! Here are your order details:\n\n"
+        + "\n".join(item_lines)
+        + f"\nTotal: ${total:,.2f}\n\n"
+        "To complete your order, send payment to the following bank details:\n\n"
+        f"{BANK_TRANSFER_DETAILS}\n\n"
+        "Reply to this message with proof of payment.\n\n"
+        "Questions? Contact us:\n"
+        f"Email: {GMAIL_ADDRESS}\n"
+        f"Instagram: {BUSINESS_INSTAGRAM_HANDLE}\n\n"
+        "Thanks for shopping with CahStopCap!"
+    )
+
+    html_body = f"""
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;color:#222;">
+      <img src="cid:cahstopcap_logo" alt="CahStopCap" style="width:100px;display:block;margin:0 auto 16px;" />
+      <p>Hi {order.customer_name},</p>
+      <p>Thanks for your order! Here are your order details:</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        {''.join(item_rows_html)}
+        <tr>
+          <td colspan="2" style="padding:8px 8px 4px;font-weight:bold;border-top:1px solid #ccc;">Total</td>
+          <td style="padding:8px 8px 4px;text-align:right;font-weight:bold;border-top:1px solid #ccc;">${total:,.2f}</td>
+        </tr>
+      </table>
+      <p>To complete your order, send payment to the following bank details:</p>
+      <pre style="font-family:inherit;background:#f5f5f5;padding:10px;border-radius:6px;white-space:pre-wrap;">{BANK_TRANSFER_DETAILS}</pre>
+      <p>Reply to this message with proof of payment.</p>
+      <p>Questions? Contact us:<br/>
+         Email: {GMAIL_ADDRESS}<br/>
+         Instagram: {BUSINESS_INSTAGRAM_HANDLE}</p>
+      <p>Thanks for shopping with CahStopCap!</p>
+    </div>
+    """
+
+    msg = MIMEMultipart("related")
+    msg["Subject"] = "CahStopCap — Bank Transfer Details"
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = to_email
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(text_body, "plain"))
+    alt.attach(MIMEText(html_body, "html"))
+    msg.attach(alt)
+
+    try:
+        with open(LOGO_PATH, "rb") as f:
+            logo = MIMEImage(f.read())
+        logo.add_header("Content-ID", "<cahstopcap_logo>")
+        logo.add_header("Content-Disposition", "inline", filename="logo.png")
+        msg.attach(logo)
+    except OSError as e:
+        print(f"[email] Could not attach logo for order {order.id}: {e}")
 
     with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
         server.starttls()
@@ -136,10 +204,36 @@ templates = Jinja2Templates(directory="templates")
 
 Base.metadata.create_all(bind=engine)
 
+DEFAULT_CAROUSEL_SLIDES = [
+    {"image_url": "static/assets/james-cahstop-trucker.jpeg", "title": "CAHSTOPCAP", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 0},
+    {"image_url": "static/assets/gennow.jpg", "title": "GENNOW", "button_text": "Playlist", "button_link": "/showroom", "sort_order": 1},
+    {"image_url": "static/assets/cahstop-bucket-carni.JPG", "title": "Never Miss RRWNZDZ", "button_text": "Check It Out", "button_link": "/showroom", "sort_order": 2},
+    {"image_url": "static/assets/ydys1.jpg", "title": "YDYS", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 3},
+    {"image_url": "static/assets/collabs.jpg", "title": "COLLABS", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 4},
+    {"image_url": "static/assets/caps-on-sti.jpg", "title": "CAHSTOPCAP", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 5},
+]
+
+
+def seed_carousel_slides():
+    db = SessionLocal()
+    try:
+        if db.execute(select(CarouselSlide)).first() is None:
+            for slide in DEFAULT_CAROUSEL_SLIDES:
+                db.add(CarouselSlide(**slide))
+            db.commit()
+    finally:
+        db.close()
+
+
+seed_carousel_slides()
+
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("cahstopcap.html", {"request": request})
+async def home(request: Request, db: Session = Depends(get_db)):
+    slides = db.execute(
+        select(CarouselSlide).where(CarouselSlide.is_active == True).order_by(CarouselSlide.sort_order)
+    ).scalars().all()
+    return templates.TemplateResponse("cahstopcap.html", {"request": request, "slides": slides})
 
 
 # Database dependency
@@ -395,7 +489,7 @@ def send_bank_details(order_id: int, body: BankDetailsRequest, db: Session = Dep
         if channel == "email":
             if "@" not in contact:
                 raise HTTPException(status_code=400, detail="Please enter a valid email")
-            send_bank_details_email(contact, order.customer_name, order.id)
+            send_bank_details_email(contact, order)
         else:
             send_bank_details_sms(contact, order.customer_name, order.id)
     except HTTPException:
@@ -642,3 +736,130 @@ def admin_update_hat(
         "stock_quantity": hat.stock_quantity,
         "is_available": hat.is_available,
     }
+
+
+# =========================================================
+# OWNER DASHBOARD — carousel API
+# =========================================================
+
+class CarouselSlideCreate(BaseModel):
+    image_url: str
+    title: str
+    button_text: str = "Shop Now"
+    button_link: str = "/showroom"
+    sort_order: int = 0
+    is_active: bool = True
+
+
+class CarouselSlideUpdate(BaseModel):
+    image_url: str | None = None
+    title: str | None = None
+    button_text: str | None = None
+    button_link: str | None = None
+    sort_order: int | None = None
+    is_active: bool | None = None
+
+
+def serialize_slide(slide: CarouselSlide):
+    return {
+        "id": slide.id,
+        "image_url": slide.image_url,
+        "title": slide.title,
+        "button_text": slide.button_text,
+        "button_link": slide.button_link,
+        "sort_order": slide.sort_order,
+        "is_active": slide.is_active,
+    }
+
+
+@app.get("/api/admin/carousel")
+def admin_list_carousel_slides(db: Session = Depends(get_db), _owner=Depends(require_owner)):
+    slides = db.execute(select(CarouselSlide).order_by(CarouselSlide.sort_order)).scalars().all()
+    return [serialize_slide(s) for s in slides]
+
+
+@app.post("/api/admin/carousel")
+def admin_create_carousel_slide(
+    body: CarouselSlideCreate,
+    db: Session = Depends(get_db),
+    _owner=Depends(require_owner),
+):
+    image_url = body.image_url.strip()
+    if not image_url:
+        raise HTTPException(status_code=400, detail="Image URL is required")
+
+    title = body.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Title is required")
+
+    slide = CarouselSlide(
+        image_url=image_url,
+        title=title,
+        button_text=(body.button_text or "").strip() or "Shop Now",
+        button_link=(body.button_link or "").strip() or "/showroom",
+        sort_order=body.sort_order,
+        is_active=body.is_active,
+    )
+    db.add(slide)
+    db.commit()
+    db.refresh(slide)
+
+    return serialize_slide(slide)
+
+
+@app.patch("/api/admin/carousel/{slide_id}")
+def admin_update_carousel_slide(
+    slide_id: int,
+    body: CarouselSlideUpdate,
+    db: Session = Depends(get_db),
+    _owner=Depends(require_owner),
+):
+    slide = db.get(CarouselSlide, slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail="Slide not found")
+
+    if body.image_url is not None:
+        if not body.image_url.strip():
+            raise HTTPException(status_code=400, detail="Image URL cannot be empty")
+        slide.image_url = body.image_url.strip()
+
+    if body.title is not None:
+        if not body.title.strip():
+            raise HTTPException(status_code=400, detail="Title cannot be empty")
+        slide.title = body.title.strip()
+
+    if body.button_text is not None:
+        if not body.button_text.strip():
+            raise HTTPException(status_code=400, detail="Button text cannot be empty")
+        slide.button_text = body.button_text.strip()
+
+    if body.button_link is not None:
+        if not body.button_link.strip():
+            raise HTTPException(status_code=400, detail="Button link cannot be empty")
+        slide.button_link = body.button_link.strip()
+
+    if body.sort_order is not None:
+        slide.sort_order = body.sort_order
+
+    if body.is_active is not None:
+        slide.is_active = body.is_active
+
+    db.commit()
+
+    return serialize_slide(slide)
+
+
+@app.delete("/api/admin/carousel/{slide_id}")
+def admin_delete_carousel_slide(
+    slide_id: int,
+    db: Session = Depends(get_db),
+    _owner=Depends(require_owner),
+):
+    slide = db.get(CarouselSlide, slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail="Slide not found")
+
+    db.delete(slide)
+    db.commit()
+
+    return {"success": True}
