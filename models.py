@@ -27,9 +27,10 @@ class CarouselSlide(Base):
 
     id = Column(Integer, primary_key=True)
     image_url = Column(String(255), nullable=False)
-    title = Column(String(100), nullable=False)
-    button_text = Column(String(50), nullable=False, default="Shop Now")
-    button_link = Column(String(255), nullable=False, default="/showroom")
+    title = Column(String(100), nullable=False, default="")
+    button_text = Column(String(50), nullable=False, default="")
+    button_link = Column(String(255), nullable=False, default="")
+    show_caption = Column(Boolean, default=True, nullable=False)
     sort_order = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True)
 

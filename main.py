@@ -2,18 +2,20 @@ import os
 import secrets
 import smtplib
 import base64
+import uuid
 import urllib.request
 import urllib.parse
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 
-from fastapi import BackgroundTasks, Depends, FastAPI, Request, HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Request, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 from starlette.middleware.sessions import SessionMiddleware
@@ -202,7 +204,22 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
+UPLOAD_DIR = Path(__file__).parent / "static" / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+MAX_UPLOAD_SIZE = 8 * 1024 * 1024  # 8MB
+
 Base.metadata.create_all(bind=engine)
+
+
+def migrate_carousel_slides():
+    with engine.begin() as conn:
+        conn.execute(text(
+            "ALTER TABLE carousel_slides ADD COLUMN IF NOT EXISTS show_caption BOOLEAN NOT NULL DEFAULT TRUE"
+        ))
+
+
+migrate_carousel_slides()
 
 DEFAULT_CAROUSEL_SLIDES = [
     {"image_url": "static/assets/james-cahstop-trucker.jpeg", "title": "CAHSTOPCAP", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 0},
@@ -248,6 +265,30 @@ def get_db():
 def require_owner(request: Request):
     if not request.session.get("is_owner"):
         raise HTTPException(status_code=401, detail="Not authenticated")
+
+
+# =========================================================
+# OWNER DASHBOARD — image uploads
+# =========================================================
+
+@app.post("/api/admin/upload-image")
+async def admin_upload_image(file: UploadFile = File(...), _owner=Depends(require_owner)):
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported image type. Allowed: {', '.join(sorted(ALLOWED_IMAGE_EXTENSIONS))}",
+        )
+
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_SIZE:
+        raise HTTPException(status_code=400, detail="Image is too large (max 8MB)")
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    destination = UPLOAD_DIR / filename
+    destination.write_bytes(contents)
+
+    return {"url": f"static/uploads/{filename}"}
 
 
 # GET all hats with optional filters
@@ -744,9 +785,10 @@ def admin_update_hat(
 
 class CarouselSlideCreate(BaseModel):
     image_url: str
-    title: str
-    button_text: str = "Shop Now"
-    button_link: str = "/showroom"
+    title: str | None = None
+    button_text: str | None = None
+    button_link: str | None = None
+    show_caption: bool = True
     sort_order: int = 0
     is_active: bool = True
 
@@ -756,6 +798,7 @@ class CarouselSlideUpdate(BaseModel):
     title: str | None = None
     button_text: str | None = None
     button_link: str | None = None
+    show_caption: bool | None = None
     sort_order: int | None = None
     is_active: bool | None = None
 
@@ -767,6 +810,7 @@ def serialize_slide(slide: CarouselSlide):
         "title": slide.title,
         "button_text": slide.button_text,
         "button_link": slide.button_link,
+        "show_caption": slide.show_caption,
         "sort_order": slide.sort_order,
         "is_active": slide.is_active,
     }
@@ -788,15 +832,16 @@ def admin_create_carousel_slide(
     if not image_url:
         raise HTTPException(status_code=400, detail="Image URL is required")
 
-    title = body.title.strip()
-    if not title:
-        raise HTTPException(status_code=400, detail="Title is required")
+    title = (body.title or "").strip()
+    if body.show_caption and not title:
+        raise HTTPException(status_code=400, detail="Title is required when the slide includes text")
 
     slide = CarouselSlide(
         image_url=image_url,
         title=title,
-        button_text=(body.button_text or "").strip() or "Shop Now",
-        button_link=(body.button_link or "").strip() or "/showroom",
+        button_text=(body.button_text or "").strip() or ("Shop Now" if body.show_caption else ""),
+        button_link=(body.button_link or "").strip() or ("/showroom" if body.show_caption else ""),
+        show_caption=body.show_caption,
         sort_order=body.sort_order,
         is_active=body.is_active,
     )
@@ -824,25 +869,25 @@ def admin_update_carousel_slide(
         slide.image_url = body.image_url.strip()
 
     if body.title is not None:
-        if not body.title.strip():
-            raise HTTPException(status_code=400, detail="Title cannot be empty")
         slide.title = body.title.strip()
 
     if body.button_text is not None:
-        if not body.button_text.strip():
-            raise HTTPException(status_code=400, detail="Button text cannot be empty")
         slide.button_text = body.button_text.strip()
 
     if body.button_link is not None:
-        if not body.button_link.strip():
-            raise HTTPException(status_code=400, detail="Button link cannot be empty")
         slide.button_link = body.button_link.strip()
+
+    if body.show_caption is not None:
+        slide.show_caption = body.show_caption
 
     if body.sort_order is not None:
         slide.sort_order = body.sort_order
 
     if body.is_active is not None:
         slide.is_active = body.is_active
+
+    if slide.show_caption and not slide.title.strip():
+        raise HTTPException(status_code=400, detail="Title is required when the slide includes text")
 
     db.commit()
 

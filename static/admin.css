@@ -116,25 +116,35 @@ header.admin-header {
 }
 
 .admin-logout-link {
-  color: white;
+  color: darkred;
   font-family: 'Quantico', sans-serif;
+  font-weight: 700;
   font-size: 0.85rem;
   text-decoration: none;
-  border: 1px solid white;
-  padding: 0.4rem 0.9rem;
-  border-radius: 4px;
+  border: 2px solid darkred;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
 }
 
 .admin-logout-link:hover {
-  background: white;
-  color: black;
+  background: darkred;
+  color: white;
 }
 
 .admin-tabs {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
   padding: 1rem 2rem 0;
   background: #f2f2f2;
+  flex-wrap: wrap;
+}
+
+.admin-tabs-left {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .admin-tab-btn {
@@ -404,4 +414,46 @@ header.admin-header {
 .hat-save-btn:disabled {
   background-color: #999;
   cursor: default;
+}
+
+.hats-table-image--lg {
+  width: 76px;
+  height: 76px;
+}
+
+.hat-field--name {
+  width: 100% !important;
+  min-width: 220px;
+}
+
+/* =========================================
+   IMAGE UPLOAD
+   ========================================= */
+.hat-form-image-field {
+  gap: 0.4rem !important;
+}
+
+.upload-status {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.upload-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.carousel-image-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
+}
+
+.row-image-input {
+  width: 130px;
+  font-size: 0.7rem;
 }

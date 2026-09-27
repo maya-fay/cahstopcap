@@ -14,13 +14,15 @@
       <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo" class="admin-header-logo" /></a>
       <h1>Owner Dashboard</h1>
     </div>
-    <a href="/admin/logout" class="admin-logout-link">Log Out</a>
   </header>
 
   <nav class="admin-tabs">
-    <button class="admin-tab-btn active" data-tab="orders">Orders</button>
-    <button class="admin-tab-btn" data-tab="hats">Hats</button>
-    <button class="admin-tab-btn" data-tab="carousel">Carousel</button>
+    <div class="admin-tabs-left">
+      <button class="admin-tab-btn active" data-tab="orders">Orders</button>
+      <button class="admin-tab-btn" data-tab="hats">Hats</button>
+      <button class="admin-tab-btn" data-tab="carousel">Carousel</button>
+    </div>
+    <a href="/admin/logout" class="admin-logout-link">Log Out</a>
   </nav>
 
   <main class="admin-main">
@@ -65,7 +67,14 @@
           </label>
           <label>
             Category
-            <input type="text" name="category" />
+            <select name="category">
+              <option value="">Select a category…</option>
+              <option value="__new__">+ Add new category</option>
+            </select>
+          </label>
+          <label id="newCategoryLabel" style="display:none;">
+            New Category
+            <input type="text" name="new_category" placeholder="e.g. Snapback" />
           </label>
           <label>
             Size
@@ -79,9 +88,12 @@
             Material
             <input type="text" name="material" />
           </label>
-          <label>
-            Image URL
-            <input type="text" name="image_url" placeholder="static/assets/yourimage.jpg" />
+          <label class="hat-form-image-field">
+            Image
+            <input type="file" id="hatImageInput" accept="image/*" />
+            <input type="hidden" name="image_url" id="hatImageUrl" />
+            <span id="hatImageStatus" class="upload-status"></span>
+            <img id="hatImagePreview" class="upload-preview" alt="Preview" style="display:none;" />
           </label>
           <label>
             Stock Quantity
@@ -121,19 +133,26 @@
       <div class="hat-form-wrap">
         <h3>Add New Slide</h3>
         <form id="addSlideForm" class="hat-form">
-          <label>
-            Image Path <span class="required-marker">*</span>
-            <input type="text" name="image_url" placeholder="static/assets/yourimage.jpg" required />
+          <label class="hat-form-image-field">
+            Image <span class="required-marker">*</span>
+            <input type="file" id="slideImageInput" accept="image/*" />
+            <input type="hidden" name="image_url" id="slideImageUrl" />
+            <span id="slideImageStatus" class="upload-status"></span>
+            <img id="slideImagePreview" class="upload-preview" alt="Preview" style="display:none;" />
           </label>
-          <label>
+          <label class="hat-form-checkbox">
+            <input type="checkbox" name="show_caption" id="slideShowCaption" checked />
+            Include title &amp; button
+          </label>
+          <label id="slideTitleLabel">
             Large Text (Title) <span class="required-marker">*</span>
             <input type="text" name="title" required />
           </label>
-          <label>
+          <label id="slideButtonTextLabel">
             Button Text
             <input type="text" name="button_text" placeholder="Shop Now" />
           </label>
-          <label>
+          <label id="slideButtonLinkLabel">
             Button Link
             <input type="text" name="button_link" placeholder="/showroom" />
           </label>
@@ -155,8 +174,8 @@
           <thead>
             <tr>
               <th>Image</th>
-              <th>Image Path</th>
               <th>Title</th>
+              <th>Show Text</th>
               <th>Button Text</th>
               <th>Button Link</th>
               <th>Order</th>
@@ -194,6 +213,33 @@
         throw new Error('Not authenticated');
       }
       return res;
+    }
+
+    async function uploadImage(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await apiFetch('/api/admin/upload-image', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Could not upload image');
+      return data.url;
+    }
+
+    function wireImageUpload({ fileInput, urlField, statusEl, previewEl }) {
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        statusEl.textContent = 'Uploading...';
+        try {
+          const url = await uploadImage(file);
+          urlField.value = url;
+          previewEl.src = resolveImagePath(url);
+          previewEl.style.display = 'block';
+          statusEl.textContent = 'Uploaded';
+        } catch (err) {
+          statusEl.textContent = err.message;
+        }
+      });
     }
 
     // ── Tabs ─────────────────────────────────────────────────────────
@@ -270,9 +316,24 @@
     }
 
     // ── Hats ─────────────────────────────────────────────────────────
+    function populateCategoryOptions(hats) {
+      const select = document.querySelector('#addHatForm select[name="category"]');
+      const currentValue = select.value;
+      const categories = [...new Set(hats.map(h => h.category).filter(Boolean))].sort();
+
+      select.innerHTML = '<option value="">Select a category…</option>' +
+        categories.map(c => `<option value="${c}">${c}</option>`).join('') +
+        '<option value="__new__">+ Add new category</option>';
+
+      if ([...select.options].some(o => o.value === currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
     async function loadHats() {
       const res = await apiFetch('/api/admin/hats');
       const hats = await res.json();
+      populateCategoryOptions(hats);
       const tbody = document.getElementById('hatsTableBody');
       tbody.innerHTML = '';
 
@@ -281,8 +342,8 @@
         tr.dataset.hatId = hat.id;
 
         tr.innerHTML = `
-          <td><img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" class="hats-table-image" /></td>
-          <td><input type="text" class="hat-field" data-field="name" value="${hat.name}" /></td>
+          <td><img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" class="hats-table-image hats-table-image--lg" /></td>
+          <td><input type="text" class="hat-field hat-field--name" data-field="name" value="${hat.name}" /></td>
           <td>${hat.brand || ''}</td>
           <td><input type="number" class="hat-field" data-field="price" value="${hat.price}" min="0" step="0.01" /></td>
           <td><input type="number" class="hat-field" data-field="stock_quantity" value="${hat.stock_quantity}" min="0" step="1" /></td>
@@ -330,6 +391,21 @@
     }
 
     // ── Add Hat ──────────────────────────────────────────────────────
+    const hatCategorySelect = document.querySelector('#addHatForm select[name="category"]');
+    const newCategoryLabel = document.getElementById('newCategoryLabel');
+    hatCategorySelect.addEventListener('change', () => {
+      const isNew = hatCategorySelect.value === '__new__';
+      newCategoryLabel.style.display = isNew ? '' : 'none';
+      if (!isNew) newCategoryLabel.querySelector('input').value = '';
+    });
+
+    wireImageUpload({
+      fileInput: document.getElementById('hatImageInput'),
+      urlField: document.getElementById('hatImageUrl'),
+      statusEl: document.getElementById('hatImageStatus'),
+      previewEl: document.getElementById('hatImagePreview'),
+    });
+
     document.getElementById('addHatForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
@@ -351,11 +427,15 @@
         return;
       }
 
+      const category = form.category.value === '__new__'
+        ? form.new_category.value.trim()
+        : form.category.value.trim();
+
       const payload = {
         name,
         price,
         brand: form.brand.value.trim() || null,
-        category: form.category.value.trim() || null,
+        category: category || null,
         size: form.size.value.trim() || null,
         color: form.color.value.trim() || null,
         material: form.material.value.trim() || null,
@@ -380,6 +460,9 @@
 
         form.reset();
         form.is_available.checked = true;
+        newCategoryLabel.style.display = 'none';
+        document.getElementById('hatImageStatus').textContent = '';
+        document.getElementById('hatImagePreview').style.display = 'none';
         loadHats();
       } catch (err) {
         errorEl.textContent = err.message;
@@ -402,9 +485,14 @@
         tr.dataset.slideId = slide.id;
 
         tr.innerHTML = `
-          <td><img src="${resolveImagePath(slide.image_url)}" alt="${slide.title}" class="hats-table-image" /></td>
-          <td><input type="text" class="hat-field" data-field="image_url" value="${slide.image_url}" /></td>
+          <td class="carousel-image-cell">
+            <img src="${resolveImagePath(slide.image_url)}" alt="${slide.title}" class="hats-table-image" />
+            <input type="hidden" class="hat-field" data-field="image_url" value="${slide.image_url}" />
+            <input type="file" class="row-image-input" accept="image/*" />
+            <span class="upload-status row-upload-status"></span>
+          </td>
           <td><input type="text" class="hat-field" data-field="title" value="${slide.title}" /></td>
+          <td><input type="checkbox" class="hat-field" data-field="show_caption" ${slide.show_caption ? 'checked' : ''} /></td>
           <td><input type="text" class="hat-field" data-field="button_text" value="${slide.button_text}" /></td>
           <td><input type="text" class="hat-field" data-field="button_link" value="${slide.button_link}" /></td>
           <td><input type="number" class="hat-field" data-field="sort_order" value="${slide.sort_order}" step="1" /></td>
@@ -414,6 +502,13 @@
             <button type="button" class="hat-save-btn slide-delete-btn">Delete</button>
           </td>
         `;
+
+        wireImageUpload({
+          fileInput: tr.querySelector('.row-image-input'),
+          urlField: tr.querySelector('[data-field="image_url"]'),
+          statusEl: tr.querySelector('.row-upload-status'),
+          previewEl: tr.querySelector('.hats-table-image'),
+        });
 
         tr.querySelector('.hat-save-btn').addEventListener('click', () => saveSlide(slide.id, tr));
         tr.querySelector('.slide-delete-btn').addEventListener('click', () => deleteSlide(slide.id));
@@ -426,6 +521,7 @@
       const payload = {
         image_url: row.querySelector('[data-field="image_url"]').value,
         title: row.querySelector('[data-field="title"]').value,
+        show_caption: row.querySelector('[data-field="show_caption"]').checked,
         button_text: row.querySelector('[data-field="button_text"]').value,
         button_link: row.querySelector('[data-field="button_link"]').value,
         sort_order: parseInt(row.querySelector('[data-field="sort_order"]').value, 10),
@@ -468,6 +564,30 @@
       loadCarousel();
     }
 
+    wireImageUpload({
+      fileInput: document.getElementById('slideImageInput'),
+      urlField: document.getElementById('slideImageUrl'),
+      statusEl: document.getElementById('slideImageStatus'),
+      previewEl: document.getElementById('slideImagePreview'),
+    });
+
+    const slideShowCaption = document.getElementById('slideShowCaption');
+    const slideTitleInput = document.querySelector('#addSlideForm input[name="title"]');
+    const slideCaptionLabels = [
+      document.getElementById('slideTitleLabel'),
+      document.getElementById('slideButtonTextLabel'),
+      document.getElementById('slideButtonLinkLabel'),
+    ];
+
+    function syncSlideCaptionFields() {
+      const showCaption = slideShowCaption.checked;
+      slideCaptionLabels.forEach(label => { label.style.display = showCaption ? '' : 'none'; });
+      slideTitleInput.required = showCaption;
+    }
+
+    slideShowCaption.addEventListener('change', syncSlideCaptionFields);
+    syncSlideCaptionFields();
+
     document.getElementById('addSlideForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
@@ -475,25 +595,27 @@
       errorEl.style.display = 'none';
 
       const image_url = form.image_url.value.trim();
+      const showCaption = form.show_caption.checked;
       const title = form.title.value.trim();
 
       if (!image_url) {
-        errorEl.textContent = 'Image path is required.';
+        errorEl.textContent = 'Please upload an image.';
         errorEl.style.display = 'block';
         return;
       }
 
-      if (!title) {
-        errorEl.textContent = 'Title is required.';
+      if (showCaption && !title) {
+        errorEl.textContent = 'Title is required when the slide includes text.';
         errorEl.style.display = 'block';
         return;
       }
 
       const payload = {
         image_url,
-        title,
-        button_text: form.button_text.value.trim() || 'Shop Now',
-        button_link: form.button_link.value.trim() || '/showroom',
+        show_caption: showCaption,
+        title: showCaption ? title : '',
+        button_text: showCaption ? (form.button_text.value.trim() || 'Shop Now') : '',
+        button_link: showCaption ? (form.button_link.value.trim() || '/showroom') : '',
         sort_order: parseInt(form.sort_order.value, 10) || 0,
         is_active: form.is_active.checked,
       };
@@ -514,6 +636,10 @@
 
         form.reset();
         form.is_active.checked = true;
+        slideShowCaption.checked = true;
+        syncSlideCaptionFields();
+        document.getElementById('slideImageStatus').textContent = '';
+        document.getElementById('slideImagePreview').style.display = 'none';
         loadCarousel();
       } catch (err) {
         errorEl.textContent = err.message;

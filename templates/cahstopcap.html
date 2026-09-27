@@ -78,11 +78,13 @@
       <div class="carousel-track">
         {% for slide in slides %}
         <div class="carousel-slide">
-          <img src="{{ slide.image_url if (slide.image_url.startswith('http') or slide.image_url.startswith('/')) else '/' + slide.image_url }}" alt="{{ slide.title }}">
+          <img src="{{ slide.image_url if (slide.image_url.startswith('http') or slide.image_url.startswith('/')) else '/' + slide.image_url }}" alt="{{ slide.title or 'CahStopCap' }}">
+          {% if slide.show_caption %}
           <div class="caption">
             <h2>{{ slide.title }}</h2>
             <a class="caption-btn" href="{{ slide.button_link }}">{{ slide.button_text }}</a>
           </div>
+          {% endif %}
         </div>
         {% endfor %}
       </div>
@@ -139,7 +141,6 @@
           </div>
         </div>
       </div>
-      <p class="credit">done by maya-fay</p>
     </footer>
 
     <script>
@@ -206,7 +207,7 @@
       updateCarousel();
 
       // ── Homepage showroom preview ─────────────────────────────────
-      const HOME_PREVIEW_COUNT = 5;
+      const HOME_PREVIEW_COUNT = 15; // 3 rows at the 5-column desktop breakpoint
 
       function resolveImagePath(url) {
         if (!url) return '/static/assets/placeholder.jpg';
