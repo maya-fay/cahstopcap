@@ -61,7 +61,8 @@ header {
   gap: 0.35rem;
 }
 
-.cart-emoji {
+.cart-emoji,
+.nav-emoji {
   font-size: 1.4rem;
   line-height: 1;
 }
