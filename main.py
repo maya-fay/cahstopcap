@@ -803,6 +803,16 @@ class CarouselSlideUpdate(BaseModel):
     is_active: bool | None = None
 
 
+def normalize_link(link: str | None) -> str:
+    """Turn 'open.spotify.com/...' into 'https://open.spotify.com/...' so it
+    isn't treated as a page on this site. Site paths ('/showroom'), anchors and
+    full URLs are left alone."""
+    link = (link or "").strip()
+    if not link or link.startswith(("/", "#", "http://", "https://", "mailto:", "tel:")):
+        return link
+    return "https://" + link
+
+
 def serialize_slide(slide: CarouselSlide):
     return {
         "id": slide.id,
@@ -840,7 +850,7 @@ def admin_create_carousel_slide(
         image_url=image_url,
         title=title,
         button_text=(body.button_text or "").strip() or ("Shop Now" if body.show_caption else ""),
-        button_link=(body.button_link or "").strip() or ("/showroom" if body.show_caption else ""),
+        button_link=normalize_link(body.button_link) or ("/showroom" if body.show_caption else ""),
         show_caption=body.show_caption,
         sort_order=body.sort_order,
         is_active=body.is_active,
@@ -875,7 +885,7 @@ def admin_update_carousel_slide(
         slide.button_text = body.button_text.strip()
 
     if body.button_link is not None:
-        slide.button_link = body.button_link.strip()
+        slide.button_link = normalize_link(body.button_link)
 
     if body.show_caption is not None:
         slide.show_caption = body.show_caption

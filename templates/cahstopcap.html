@@ -84,7 +84,7 @@
           {% if slide.show_caption %}
           <div class="caption">
             <h2>{{ slide.title }}</h2>
-            <a class="caption-btn" href="{{ slide.button_link }}">{{ slide.button_text }}</a>
+            <a class="caption-btn" href="{{ slide.button_link }}"{% if slide.button_link.startswith('http') %} target="_blank" rel="noopener"{% endif %}>{{ slide.button_text }}</a>
           </div>
           {% endif %}
         </div>
