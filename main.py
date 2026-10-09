@@ -60,9 +60,10 @@ LOGO_PATH = os.path.join(os.path.dirname(__file__), "static", "logo-email.png")
 
 # TODO: replace with the real bank details.
 BANK_TRANSFER_DETAILS = (
-    "Bank: [BANK NAME]\n"
-    "Account Name: [ACCOUNT NAME]\n"
-    "Account Number: [ACCOUNT NUMBER]\n"
+    "Bank: [NCB]\n"
+    "Account Name: [Mario Hudson]\n"
+    "Account Number: []\n"
+    "Account Type: [ACCOUNT TYPE]\n"
     "Branch: [BRANCH]"
 )
 
@@ -437,8 +438,6 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
     payment_method = order_in.payment_method.strip().lower()
     if payment_method not in PAYMENT_METHODS:
         raise HTTPException(status_code=400, detail=f"Payment method must be one of {PAYMENT_METHODS}")
-    if payment_method == "cash_on_delivery" and fulfillment_type != "delivery":
-        raise HTTPException(status_code=400, detail="Cash on delivery is only available for delivery orders")
 
     total_price = 0
     order_items = []

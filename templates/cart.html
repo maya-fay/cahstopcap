@@ -207,7 +207,7 @@
             <span class="cart-fulfillment-label">Delivery or pickup?</span>
             <div class="cart-fulfillment-options">
               <label>
-                <input type="radio" name="fulfillmentType" value="pickup" checked /> Pickup
+                <input type="radio" name="fulfillmentType" value="pickup" checked /> Pickup at UWI
               </label>
               <label>
                 <input type="radio" name="fulfillmentType" value="delivery" /> Delivery
@@ -220,17 +220,8 @@
           </label>
           <div class="cart-fulfillment">
             <span class="cart-fulfillment-label">Payment method</span>
-            <div class="cart-fulfillment-options">
-              <label>
-                <input type="radio" name="paymentMethod" value="bank_transfer" checked /> Bank Transfer
-              </label>
-              <label id="codLabel" class="payment-option-disabled">
-                <input type="radio" name="paymentMethod" value="cash_on_delivery" id="codRadio" disabled /> Cash on Delivery
-              </label>
-            </div>
-            <p class="cart-optional" id="codHint">Cash on delivery is only available for delivery orders.</p>
+            <p>Cash on delivery or at pickup.</p>
           </div>
-          <p class="cart-demo-note">Demo checkout — no real payment is processed.</p>
           <button id="placeOrderBtn" class="button place-order-btn" ${hasIssue ? 'disabled' : ''}>
             Place Order
           </button>
@@ -239,21 +230,11 @@
       `;
 
       const addressField = document.getElementById('addressField');
-      const codRadio = document.getElementById('codRadio');
-      const codLabel = document.getElementById('codLabel');
-      const bankRadio = document.querySelector('input[name="paymentMethod"][value="bank_transfer"]');
 
       document.querySelectorAll('input[name="fulfillmentType"]').forEach(radio => {
         radio.addEventListener('change', () => {
           const isDelivery = radio.value === 'delivery';
           addressField.style.display = isDelivery ? 'flex' : 'none';
-
-          codRadio.disabled = !isDelivery;
-          codLabel.classList.toggle('payment-option-disabled', !isDelivery);
-          if (!isDelivery && codRadio.checked) {
-            codRadio.checked = false;
-            bankRadio.checked = true;
-          }
         });
       });
 
@@ -301,7 +282,7 @@
       const instagramHandle = document.getElementById('instagramHandle').value.trim();
       const fulfillmentType = document.querySelector('input[name="fulfillmentType"]:checked').value;
       const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
-      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+      const paymentMethod = 'cash_on_delivery';
 
       if (!customerName) {
         errorEl.textContent = 'Please enter your name.';
