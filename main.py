@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Request, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -22,7 +22,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
-from models import Hat, Category, Order, OrderItem, CarouselSlide
+from models import Hat, Category, Order, OrderItem, CarouselSlide, UploadedImage
 
 from database import engine, SessionLocal, Base, get_db
 app = FastAPI()
@@ -205,9 +205,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Jinja2 templates
 templates = Jinja2Templates(directory="templates")
 
-UPLOAD_DIR = Path(__file__).parent / "static" / "uploads"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+IMAGE_CONTENT_TYPES = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+}
 MAX_UPLOAD_SIZE = 8 * 1024 * 1024  # 8MB
 
 Base.metadata.create_all(bind=engine)
@@ -218,6 +223,10 @@ def migrate_carousel_slides():
         conn.execute(text(
             "ALTER TABLE carousel_slides ADD COLUMN IF NOT EXISTS show_caption BOOLEAN NOT NULL DEFAULT TRUE"
         ))
+        conn.execute(text(
+            "UPDATE carousel_slides SET image_url = 'static/assets/ydys1.jpeg' "
+            "WHERE image_url = 'static/assets/ydys1.jpg'"
+        ))
 
 
 migrate_carousel_slides()
@@ -226,7 +235,7 @@ DEFAULT_CAROUSEL_SLIDES = [
     {"image_url": "static/assets/james-cahstop-trucker.jpeg", "title": "CAHSTOPCAP", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 0},
     {"image_url": "static/assets/gennow.jpg", "title": "GENNOW", "button_text": "Playlist", "button_link": "/showroom", "sort_order": 1},
     {"image_url": "static/assets/cahstop-bucket-carni.JPG", "title": "Never Miss RRWNZDZ", "button_text": "Check It Out", "button_link": "/showroom", "sort_order": 2},
-    {"image_url": "static/assets/ydys1.jpg", "title": "YDYS", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 3},
+    {"image_url": "static/assets/ydys1.jpeg", "title": "YDYS", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 3},
     {"image_url": "static/assets/collabs.jpg", "title": "COLLABS", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 4},
     {"image_url": "static/assets/caps-on-sti.jpg", "title": "CAHSTOPCAP", "button_text": "Shop Now", "button_link": "/showroom", "sort_order": 5},
 ]
@@ -273,7 +282,11 @@ def require_owner(request: Request):
 # =========================================================
 
 @app.post("/api/admin/upload-image")
-async def admin_upload_image(file: UploadFile = File(...), _owner=Depends(require_owner)):
+async def admin_upload_image(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _owner=Depends(require_owner),
+):
     ext = Path(file.filename or "").suffix.lower()
     if ext not in ALLOWED_IMAGE_EXTENSIONS:
         raise HTTPException(
@@ -286,10 +299,24 @@ async def admin_upload_image(file: UploadFile = File(...), _owner=Depends(requir
         raise HTTPException(status_code=400, detail="Image is too large (max 8MB)")
 
     filename = f"{uuid.uuid4().hex}{ext}"
-    destination = UPLOAD_DIR / filename
-    destination.write_bytes(contents)
+    db.add(UploadedImage(filename=filename, content_type=IMAGE_CONTENT_TYPES[ext], data=contents))
+    db.commit()
 
-    return {"url": f"static/uploads/{filename}"}
+    return {"url": f"/images/{filename}"}
+
+
+# Serve images uploaded from the dashboard. Filenames are unique per upload,
+# so browsers can cache them forever.
+@app.get("/images/{filename}")
+def get_uploaded_image(filename: str, db: Session = Depends(get_db)):
+    image = db.get(UploadedImage, filename)
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return Response(
+        content=image.data,
+        media_type=image.content_type,
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )
 
 
 # GET all hats with optional filters

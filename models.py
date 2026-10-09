@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Text, Boolean, DateTime, ForeignKey, DECIMAL
+from sqlalchemy import Column, Integer, String, Float, Text, Boolean, DateTime, ForeignKey, DECIMAL, LargeBinary
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -33,6 +33,17 @@ class CarouselSlide(Base):
     show_caption = Column(Boolean, default=True, nullable=False)
     sort_order = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True)
+
+
+class UploadedImage(Base):
+    """Images uploaded from the owner dashboard. Stored in the database
+    because Render's local disk is wiped on every restart/redeploy."""
+    __tablename__ = "uploaded_images"
+
+    filename = Column(String(64), primary_key=True)  # e.g. "3f2a...c1.jpg"
+    content_type = Column(String(50), nullable=False)
+    data = Column(LargeBinary, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class Category(Base):
