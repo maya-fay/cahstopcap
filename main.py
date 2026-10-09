@@ -1,3 +1,4 @@
+import io
 import os
 import secrets
 import smtplib
@@ -14,6 +15,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Request, HTTPExcept
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from PIL import Image, ImageOps
 from pydantic import BaseModel
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import sessionmaker, Session
@@ -213,7 +215,21 @@ IMAGE_CONTENT_TYPES = {
     ".gif": "image/gif",
     ".webp": "image/webp",
 }
-MAX_UPLOAD_SIZE = 8 * 1024 * 1024  # 8MB
+MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25MB — shrunk before saving
+MAX_IMAGE_DIMENSION = 1600  # px, longest side
+
+
+def shrink_image(contents: bytes) -> bytes:
+    """Resize a photo to at most MAX_IMAGE_DIMENSION and re-encode as WebP.
+    Phone photos go from several MB to a few hundred KB."""
+    image = Image.open(io.BytesIO(contents))
+    image = ImageOps.exif_transpose(image)  # respect phone rotation
+    image.thumbnail((MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION))
+    if image.mode not in ("RGB", "RGBA"):
+        image = image.convert("RGBA" if "A" in image.getbands() or "transparency" in image.info else "RGB")
+    out = io.BytesIO()
+    image.save(out, format="WEBP", quality=80, method=6)
+    return out.getvalue()
 
 Base.metadata.create_all(bind=engine)
 
@@ -296,7 +312,15 @@ async def admin_upload_image(
 
     contents = await file.read()
     if len(contents) > MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=400, detail="Image is too large (max 8MB)")
+        raise HTTPException(status_code=400, detail="Image is too large (max 25MB)")
+
+    # GIFs are kept as-is so animations survive; everything else is shrunk.
+    if ext != ".gif":
+        try:
+            contents = shrink_image(contents)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Could not read that image file")
+        ext = ".webp"
 
     filename = f"{uuid.uuid4().hex}{ext}"
     db.add(UploadedImage(filename=filename, content_type=IMAGE_CONTENT_TYPES[ext], data=contents))

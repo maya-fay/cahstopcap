@@ -8,3 +8,4 @@ psycopg2-binary
 psycopg[binary]
 itsdangerous
 python-multipart
+Pillow
