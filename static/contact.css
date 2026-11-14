@@ -55,7 +55,8 @@ a.contact-card:focus-visible {
 }
 
 .contact-card-icon {
-  font-size: 44px;
+  width: 44px;
+  height: 44px;
 }
 
 .contact-card-img {
