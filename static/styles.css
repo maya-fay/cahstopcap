@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Blaka+Hollow&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Press+Start+2P&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&family=Rock+3D&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=info,location_on,mail,shopping_cart,storefront&display=block');
 
 /* =========================================
    BASE STYLES
@@ -78,6 +79,29 @@ nav a {
 
 .header-icon {
   display: none;
+}
+
+/* Mobile nav icons — sharp corners and bold weight to sit alongside Quantico */
+.nav-symbol {
+  font-family: 'Material Symbols Sharp';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 40;
+  color: white;
+  transition: color 0.15s ease;
+}
+
+nav a:hover .nav-symbol,
+nav a:active .nav-symbol,
+nav a:focus-visible .nav-symbol {
+  color: darkred;
 }
 
 @media (max-width: 834px) {

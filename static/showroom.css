@@ -61,10 +61,9 @@ header {
   gap: 0.35rem;
 }
 
-.cart-emoji,
-.nav-emoji {
-  font-size: 1.4rem;
-  line-height: 1;
+.header-nav .nav-symbol {
+  font-size: 28px;
+  font-variation-settings: 'FILL' 0, 'wght' 700, 'GRAD' 0, 'opsz' 24;
 }
 
 @media (max-width: 834px) {

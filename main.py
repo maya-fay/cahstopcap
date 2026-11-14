@@ -440,6 +440,11 @@ def cart_page(request: Request):
     return templates.TemplateResponse("cart.html", {"request": request})
 
 
+@app.get("/contact", response_class=HTMLResponse)
+def contact_page(request: Request):
+    return templates.TemplateResponse("contact.html", {"request": request})
+
+
 class OrderItemIn(BaseModel):
     hat_id: int
     quantity: int = 1

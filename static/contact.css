@@ -1,0 +1,75 @@
+/* =========================================
+   CONTACT PAGE
+   ========================================= */
+.contact-page {
+  padding: 0 1.5rem 4rem;
+  color: #ddd;
+}
+
+.contact-intro {
+  font-family: 'Quantico', sans-serif;
+  font-size: 1.2rem;
+  text-align: center;
+  margin: 0.5rem auto 2.5rem;
+  max-width: 600px;
+}
+
+.contact-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.25rem;
+  border: 2px solid #333;
+  border-radius: 4px;
+  color: #ddd;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+a.contact-card:hover,
+a.contact-card:focus-visible {
+  border-color: darkred;
+  transform: translateY(-3px);
+}
+
+.contact-card h3 {
+  font-family: 'Quantico', sans-serif;
+  font-size: 1.6rem;
+  color: white;
+  margin: 0.75rem 0 0.4rem;
+}
+
+.contact-card p {
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.contact-card-icon {
+  font-size: 44px;
+}
+
+.contact-card-img {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 834px) {
+  .contact-cards {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+
+  .contact-page .showroom-header {
+    font-size: 2.8rem;
+  }
+}

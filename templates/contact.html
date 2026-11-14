@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CahStopCap - Contact</title>
+  <link rel="icon" type="image/png" href="/static/logo.png" />
+  <link rel="apple-touch-icon" href="/static/logo.png" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/showroom.css" />
+  <link rel="stylesheet" href="/static/contact.css" />
+</head>
+<body class="index">
+
+  <!-- HEADER -->
+  <header>
+    <nav class="header-nav">
+      <div class="nav-item">
+        <span class="nav-text"><a href="/showroom">Shop</a></span>
+        <span class="nav-icon"><a href="/showroom" aria-label="Shop"><span class="nav-symbol" aria-hidden="true">storefront</span></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/#about">About</a></span>
+        <span class="nav-icon"><a href="/#about" aria-label="About"><span class="nav-symbol" aria-hidden="true">info</span></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/contact">Contact</a></span>
+        <span class="nav-icon"><a href="/contact" aria-label="Contact"><span class="nav-symbol" aria-hidden="true">mail</span></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/cart" class="nav-cart-link">Cart <span class="cart-count-badge">0</span></a></span>
+        <span class="nav-icon"><a href="/cart" class="nav-cart-link" aria-label="Cart"><span class="nav-symbol" aria-hidden="true">shopping_cart</span><span class="cart-count-badge">0</span></a></span>
+      </div>
+    </nav>
+    <div class="header-logo">
+      <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo"></a>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <div class="marquee">
+    <span> YDYS | YOU DEFINE YOUR SWAG | YDYS </span>
+  </div>
+
+  <!-- CONTACT SECTION -->
+  <section class="contact-page">
+    <h2 class="showroom-header">CONTACT</h2>
+    <p class="contact-intro">Questions about a hat, an order or a collab? Reach out.</p>
+
+    <div class="contact-cards">
+      <a class="contact-card" href="mailto:cahstopcap@gmail.com">
+        <span class="nav-symbol contact-card-icon" aria-hidden="true">mail</span>
+        <h3>Email</h3>
+        <p>cahstopcap@gmail.com</p>
+      </a>
+
+      <a class="contact-card" href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank" rel="noopener">
+        <img src="/static/assets/instagram.png" class="contact-card-icon contact-card-img" alt="" />
+        <h3>Instagram</h3>
+        <p>DM us @cahstopcap</p>
+      </a>
+
+      <div class="contact-card">
+        <span class="nav-symbol contact-card-icon" aria-hidden="true">location_on</span>
+        <h3>Find Us</h3>
+        <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH<br />Pickup at UWI</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-info">
+      <div>
+        <h4>Find Us</h4>
+        <p>Based in Kingston<br />Operating on the campuses of UWI and UTECH</p>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <div class="footer-social">
+          <a href="mailto:cahstopcap@gmail.com" class="footer-icon-link" aria-label="Email us">
+            <svg viewBox="0 0 24 24" class="email-icon" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke="white" stroke-width="1.6"/>
+              <path d="M3 6.5L12 13L21 6.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a href="https://www.instagram.com/cahstopcap?igsh=MWJseGo2M2pxcWp1eg==" target="_blank" class="footer-icon-link">
+            <img src="/static/assets/instagram.png" class="ig-logo" alt="Instagram" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem('cart') || '{}');
+    const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+    document.querySelectorAll('.cart-count-badge').forEach(el => el.textContent = count);
+  </script>
+</body>
+</html>
