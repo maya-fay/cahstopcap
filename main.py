@@ -1,6 +1,10 @@
+import html
 import io
 import os
 import secrets
+import threading
+import time
+from collections import defaultdict, deque
 import smtplib
 import base64
 import uuid
@@ -12,11 +16,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Request, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from PIL import Image, ImageOps
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
@@ -29,16 +34,102 @@ from models import Hat, Category, Order, OrderItem, CarouselSlide, UploadedImage
 from database import engine, SessionLocal, Base, get_db
 app = FastAPI()
 
-# Session cookie (used for the owner dashboard login)
-SESSION_SECRET = os.getenv("SESSION_SECRET_KEY") or secrets.token_hex(32)
+# Anything other than ENVIRONMENT=development is treated as production, so a
+# missing variable on the host fails safe (secure cookies, HSTS).
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "production").lower() != "development"
+
+# Session cookie (used for the owner dashboard login and to remember which
+# orders this browser placed)
+SESSION_SECRET = os.getenv("SESSION_SECRET_KEY")
+if not SESSION_SECRET:
+    print("[security] SESSION_SECRET_KEY not set — using a random key; everyone is logged out on restart")
+    SESSION_SECRET = secrets.token_hex(32)
 OWNER_PASSWORD = os.getenv("OWNER_PASSWORD")
+if OWNER_PASSWORD and len(OWNER_PASSWORD) < 12:
+    print("[security] OWNER_PASSWORD is shorter than 12 characters — use a long random password")
 
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=os.getenv("ENVIRONMENT") == "production",
+    https_only=IS_PRODUCTION,
+    max_age=60 * 60 * 12,  # 12 hours
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if IS_PRODUCTION:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    if request.url.path.startswith(("/admin", "/api/admin")):
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
+
+
+class RateLimiter:
+    """Small in-memory sliding-window limiter. Good enough for a single
+    server instance; counts reset when the app restarts."""
+
+    def __init__(self, max_hits: int, window_seconds: int):
+        self.max_hits = max_hits
+        self.window = window_seconds
+        self.hits: dict[str, deque] = defaultdict(deque)
+        self.lock = threading.Lock()
+
+    def _count(self, key: str, now: float) -> int:
+        q = self.hits.get(key)
+        if q is None:
+            return 0
+        while q and now - q[0] > self.window:
+            q.popleft()
+        if not q:
+            del self.hits[key]
+            return 0
+        return len(q)
+
+    def is_limited(self, key: str) -> bool:
+        with self.lock:
+            return self._count(key, time.monotonic()) >= self.max_hits
+
+    def hit(self, key: str):
+        with self.lock:
+            now = time.monotonic()
+            self._count(key, now)
+            self.hits[key].append(now)
+
+    def reset(self, key: str):
+        with self.lock:
+            self.hits.pop(key, None)
+
+
+def client_ip(request: Request) -> str:
+    # Uvicorn is started with --proxy-headers (see render.yaml), so this is
+    # the visitor's IP rather than Render's load balancer.
+    return request.client.host if request.client else "unknown"
+
+
+login_limiter = RateLimiter(max_hits=5, window_seconds=15 * 60)        # failed logins per IP
+order_limiter = RateLimiter(max_hits=5, window_seconds=60 * 60)        # orders per IP
+bank_details_limiter = RateLimiter(max_hits=5, window_seconds=60 * 60)  # sends per IP
+
+MAX_QUANTITY_PER_ITEM = 10
+MAX_ITEMS_PER_ORDER = 20
+MAX_BANK_DETAILS_SENDS_PER_ORDER = 3
+
+
+@app.exception_handler(RequestValidationError)
+async def readable_validation_error(request: Request, exc: RequestValidationError):
+    """Return a plain-text message (the pages show `detail` to the user)
+    instead of FastAPI's list of error objects."""
+    messages = []
+    for err in exc.errors():
+        field = " ".join(str(part) for part in err.get("loc", [])[1:] if not isinstance(part, int))
+        messages.append(f"{field}: {err.get('msg')}" if field else str(err.get("msg")))
+    return JSONResponse(status_code=422, content={"detail": "; ".join(messages) or "Invalid request"})
 
 ORDER_STATUSES = ["placed", "processing", "out_for_delivery", "completed"]
 STATUS_LABELS = {
@@ -118,7 +209,7 @@ def send_bank_details_email(to_email: str, order: Order):
         line_total = float(item.price) * item.quantity
         item_lines.append(f"- {name} x{item.quantity} — ${line_total:,.2f}")
         item_rows_html.append(
-            f"<tr><td style='padding:4px 8px;'>{name}</td>"
+            f"<tr><td style='padding:4px 8px;'>{html.escape(name)}</td>"
             f"<td style='padding:4px 8px;text-align:center;'>{item.quantity}</td>"
             f"<td style='padding:4px 8px;text-align:right;'>${line_total:,.2f}</td></tr>"
         )
@@ -141,7 +232,7 @@ def send_bank_details_email(to_email: str, order: Order):
     html_body = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;color:#222;">
       <img src="cid:cahstopcap_logo" alt="CahStopCap" style="width:100px;display:block;margin:0 auto 16px;" />
-      <p>Hi {order.customer_name},</p>
+      <p>Hi {html.escape(order.customer_name)},</p>
       <p>Thanks for your order! Here are your order details:</p>
       <table style="width:100%;border-collapse:collapse;font-size:14px;">
         {''.join(item_rows_html)}
@@ -151,7 +242,7 @@ def send_bank_details_email(to_email: str, order: Order):
         </tr>
       </table>
       <p>To complete your order, send payment to the following bank details:</p>
-      <pre style="font-family:inherit;background:#f5f5f5;padding:10px;border-radius:6px;white-space:pre-wrap;">{BANK_TRANSFER_DETAILS}</pre>
+      <pre style="font-family:inherit;background:#f5f5f5;padding:10px;border-radius:6px;white-space:pre-wrap;">{html.escape(BANK_TRANSFER_DETAILS)}</pre>
       <p>Reply to this message with proof of payment.</p>
       <p>Questions? Contact us:<br/>
          Email: {GMAIL_ADDRESS}<br/>
@@ -447,23 +538,31 @@ def contact_page(request: Request):
 
 class OrderItemIn(BaseModel):
     hat_id: int
-    quantity: int = 1
+    quantity: int = Field(1, ge=1, le=MAX_QUANTITY_PER_ITEM)
 
 
 class OrderIn(BaseModel):
-    customer_name: str
-    customer_email: str
-    customer_phone: str
-    instagram_handle: str | None = None
-    fulfillment_type: str
-    delivery_address: str | None = None
-    payment_method: str
-    items: list[OrderItemIn]
+    # Lengths match the database columns in models.py
+    customer_name: str = Field(max_length=100)
+    customer_email: str = Field(max_length=255)
+    customer_phone: str = Field(max_length=30)
+    instagram_handle: str | None = Field(None, max_length=100)
+    fulfillment_type: str = Field(max_length=20)
+    delivery_address: str | None = Field(None, max_length=500)
+    payment_method: str = Field(max_length=20)
+    items: list[OrderItemIn] = Field(max_length=MAX_ITEMS_PER_ORDER)
 
 
 # POST place an order (simulated checkout — no real payment is processed)
 @app.post("/api/orders")
-def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
+def create_order(order_in: OrderIn, request: Request, db: Session = Depends(get_db)):
+    ip = client_ip(request)
+    if order_limiter.is_limited(ip):
+        raise HTTPException(
+            status_code=429,
+            detail="Too many orders from this connection. Please try again later or contact us.",
+        )
+
     if not order_in.items:
         raise HTTPException(status_code=400, detail="Cart is empty")
 
@@ -535,6 +634,13 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(order)
 
+    order_limiter.hit(ip)
+
+    # Remember that this browser placed the order, so only it can ask for
+    # the bank details to be sent.
+    placed = request.session.get("placed_orders", [])
+    request.session["placed_orders"] = (placed + [order.id])[-10:]
+
     return {
         "id": order.id,
         "customer_name": order.customer_name,
@@ -559,13 +665,30 @@ def create_order(order_in: OrderIn, db: Session = Depends(get_db)):
 
 
 class BankDetailsRequest(BaseModel):
-    channel: str
-    contact: str
+    channel: str = Field(max_length=10)
 
 
-# POST send bank transfer details to the customer by email or text
+# POST send bank transfer details to the customer by email or text.
+# Only the browser that placed the order can trigger this, and the details
+# only ever go to the email/phone saved on the order.
 @app.post("/api/orders/{order_id}/send-bank-details")
-def send_bank_details(order_id: int, body: BankDetailsRequest, db: Session = Depends(get_db)):
+def send_bank_details(
+    order_id: int,
+    body: BankDetailsRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    if order_id not in request.session.get("placed_orders", []):
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    ip = client_ip(request)
+    sends = request.session.get("bank_details_sends", {})
+    if bank_details_limiter.is_limited(ip) or sends.get(str(order_id), 0) >= MAX_BANK_DETAILS_SENDS_PER_ORDER:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Bank details were already sent. Check your messages or contact us on Instagram {BUSINESS_INSTAGRAM_HANDLE}.",
+        )
+
     order = db.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -577,19 +700,19 @@ def send_bank_details(order_id: int, body: BankDetailsRequest, db: Session = Dep
     if channel not in ("email", "phone"):
         raise HTTPException(status_code=400, detail="Channel must be 'email' or 'phone'")
 
-    contact = body.contact.strip()
-    if not contact:
-        raise HTTPException(status_code=400, detail="Please provide a phone number or email")
+    contact = (order.customer_email if channel == "email" else order.customer_phone) or ""
+    if not contact.strip():
+        raise HTTPException(status_code=400, detail=f"This order has no {channel} on file")
+
+    bank_details_limiter.hit(ip)
+    sends[str(order_id)] = sends.get(str(order_id), 0) + 1
+    request.session["bank_details_sends"] = sends
 
     try:
         if channel == "email":
-            if "@" not in contact:
-                raise HTTPException(status_code=400, detail="Please enter a valid email")
-            send_bank_details_email(contact, order)
+            send_bank_details_email(contact.strip(), order)
         else:
-            send_bank_details_sms(contact, order.customer_name, order.id)
-    except HTTPException:
-        raise
+            send_bank_details_sms(contact.strip(), order.customer_name, order.id)
     except Exception as e:
         print(f"[bank-details] Failed to send via {channel} for order {order_id}: {e}")
         raise HTTPException(status_code=502, detail="Could not send bank details right now. Please try again.")
@@ -610,13 +733,24 @@ def admin_login_page(request: Request):
 
 @app.post("/admin/login", response_class=HTMLResponse)
 async def admin_login_submit(request: Request):
-    form = await request.form()
-    password = form.get("password", "")
+    ip = client_ip(request)
+    if login_limiter.is_limited(ip):
+        return templates.TemplateResponse(
+            "admin_login.html",
+            {"request": request, "error": "Too many failed attempts. Try again in 15 minutes."},
+            status_code=429,
+        )
 
-    if OWNER_PASSWORD and secrets.compare_digest(password, OWNER_PASSWORD):
+    form = await request.form()
+    password = str(form.get("password", ""))
+
+    if OWNER_PASSWORD and secrets.compare_digest(password.encode(), OWNER_PASSWORD.encode()):
+        login_limiter.reset(ip)
+        request.session.clear()  # start a fresh session on login
         request.session["is_owner"] = True
         return RedirectResponse("/admin", status_code=303)
 
+    login_limiter.hit(ip)
     return templates.TemplateResponse(
         "admin_login.html",
         {"request": request, "error": "Incorrect password"},

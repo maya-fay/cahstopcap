@@ -75,6 +75,8 @@
     </div>
   </footer>
 
+  <script src="/static/js/escape.js"></script>
+
   <script>
     function resolveImagePath(url) {
       if (!url) return '/static/assets/placeholder.jpg';
@@ -160,9 +162,9 @@
 
         return `
           <div class="cart-row ${outOfStock ? 'cart-row-issue' : ''}" data-hat-id="${id}">
-            <img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" class="cart-row-image" />
+            <img src="${escapeHtml(resolveImagePath(hat.image_url))}" alt="${escapeHtml(hat.name)}" class="cart-row-image" />
             <div class="cart-row-info">
-              <h3>${hat.name}</h3>
+              <h3>${escapeHtml(hat.name)}</h3>
               <p class="cart-row-price">${priceStr}</p>
               ${outOfStock ? '<p class="cart-row-warning">Out of stock — remove to continue</p>' : ''}
               ${!outOfStock && exceedsStock ? `<p class="cart-row-warning">Only ${hat.stock_quantity} left — quantity reduced</p>` : ''}
@@ -258,6 +260,7 @@
         delete cart[id];
       } else {
         if (hat && qty > hat.stock_quantity) qty = hat.stock_quantity;
+        if (qty > 10) qty = 10; // per-hat limit, matches the server
         cart[id] = qty;
       }
 
@@ -364,9 +367,9 @@
         const lineTotalStr = lineTotal.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
         return `
           <div class="order-preview-row">
-            <img src="${resolveImagePath(item.hat_image)}" alt="${item.hat_name}" class="order-preview-image" />
+            <img src="${escapeHtml(resolveImagePath(item.hat_image))}" alt="${escapeHtml(item.hat_name)}" class="order-preview-image" />
             <div class="order-preview-info">
-              <h4>${item.hat_name}</h4>
+              <h4>${escapeHtml(item.hat_name)}</h4>
               <p>Qty: ${item.quantity}</p>
             </div>
             <div class="order-preview-amount">${lineTotalStr}</div>
@@ -377,7 +380,7 @@
       container.innerHTML = `
         <div class="cart-confirmation">
           <h3>Order placed!</h3>
-          <p>Thanks, ${order.customer_name} — your order has been placed.</p>
+          <p>Thanks, ${escapeHtml(order.customer_name)} — your order has been placed.</p>
 
           <div class="order-preview">${itemRows}</div>
           <div class="order-preview-total">
@@ -402,7 +405,7 @@
       section.innerHTML = `
         <div class="bank-transfer-card">
           <h4>Get Bank Transfer Details</h4>
-          <p>Choose where to send the bank details.</p>
+          <p>Choose where to send the bank details. We'll send them to the contact on your order.</p>
           <div class="cart-fulfillment-options bank-channel-options">
             <label>
               <input type="radio" name="bankChannel" value="email" checked /> Email
@@ -413,7 +416,7 @@
           </div>
           <label class="cart-name-label">
             <span id="bankContactLabel">Email</span>
-            <input type="text" id="bankContactInput" value="${order.customer_email || ''}" />
+            <input type="text" id="bankContactInput" value="${escapeHtml(order.customer_email)}" readonly />
           </label>
           <button id="sendBankDetailsBtn" class="button">Send Details</button>
           <p id="bankDetailsError" class="cart-row-warning" style="display:none;"></p>
@@ -444,7 +447,7 @@
         errorEl.style.display = 'none';
 
         if (!contact) {
-          errorEl.textContent = 'Please enter a phone number or email.';
+          errorEl.textContent = 'There is no ' + (channel === 'email' ? 'email' : 'phone number') + ' on this order.';
           errorEl.style.display = 'block';
           return;
         }
@@ -465,7 +468,7 @@
         const res = await fetch(`/api/orders/${order.id}/send-bank-details`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ channel, contact })
+          body: JSON.stringify({ channel })
         });
 
         const data = await res.json();
@@ -479,7 +482,7 @@
       } catch (err) {
         section.innerHTML = `
           <div class="bank-transfer-card">
-            <p class="cart-row-warning">${err.message}</p>
+            <p class="cart-row-warning">${escapeHtml(err.message)}</p>
             <button id="retryBankDetailsBtn" class="button">Try Again</button>
           </div>
         `;

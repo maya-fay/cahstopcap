@@ -76,6 +76,8 @@
     </div>
   </footer>
 
+  <script src="/static/js/escape.js"></script>
+
   <script>
     function resolveImagePath(url) {
       if (!url) return '/static/assets/placeholder.jpg';
@@ -152,15 +154,15 @@
       container.innerHTML = `
         <div class="hat-detail-card">
           <div class="hat-detail-image ${outOfStock ? 'out-of-stock' : ''}">
-            <img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" />
+            <img src="${escapeHtml(resolveImagePath(hat.image_url))}" alt="${escapeHtml(hat.name)}" />
             ${outOfStock ? '<span class="out-of-stock-badge">Out of Stock</span>' : ''}
           </div>
           <div class="hat-detail-info">
-            <h2 class="hat-detail-name">${hat.name}</h2>
+            <h2 class="hat-detail-name">${escapeHtml(hat.name)}</h2>
             <p class="hat-detail-price">${price}</p>
             <dl class="hat-detail-specs">
-              ${hat.brand ? `<dt>Brand</dt><dd>${hat.brand}</dd>` : ''}
-              ${hat.category ? `<dt>Category</dt><dd>${hat.category}</dd>` : ''}
+              ${hat.brand ? `<dt>Brand</dt><dd>${escapeHtml(hat.brand)}</dd>` : ''}
+              ${hat.category ? `<dt>Category</dt><dd>${escapeHtml(hat.category)}</dd>` : ''}
             </dl>
             <button id="detailAddToCart" class="button add-to-cart-btn" ${outOfStock ? 'disabled' : ''}>
               ${outOfStock ? 'Out of Stock' : 'Add to Cart'}
