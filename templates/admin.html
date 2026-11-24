@@ -193,6 +193,8 @@
     </section>
   </main>
 
+  <script src="/static/js/escape.js"></script>
+
   <script>
     const ORDER_STATUSES = ['placed', 'processing', 'out_for_delivery', 'completed'];
     const STATUS_LABELS = {
@@ -271,7 +273,7 @@
         const card = document.createElement('div');
         card.className = 'order-card';
 
-        const itemsHtml = order.items.map(i => `<li>${i.quantity} &times; ${i.hat_name}</li>`).join('');
+        const itemsHtml = order.items.map(i => `<li>${i.quantity} &times; ${escapeHtml(i.hat_name)}</li>`).join('');
         const createdDate = new Date(order.created_at).toLocaleString();
 
         const optionsHtml = ORDER_STATUSES.map(s =>
@@ -285,12 +287,12 @@
             <strong>#${order.id}</strong>
             <span>$${Number(order.total_price).toFixed(2)}</span>
           </div>
-          <p class="order-customer">${order.customer_name}</p>
+          <p class="order-customer">${escapeHtml(order.customer_name)}</p>
           <p class="order-date">${createdDate}</p>
-          <p class="order-contact">${order.customer_email || ''}</p>
-          <p class="order-contact">${order.customer_phone || ''}</p>
-          ${order.instagram_handle ? `<p class="order-contact">${order.instagram_handle}</p>` : ''}
-          <p class="order-fulfillment">${fulfillmentLabel}${order.fulfillment_type === 'delivery' && order.delivery_address ? `: ${order.delivery_address}` : ''}</p>
+          <p class="order-contact">${escapeHtml(order.customer_email)}</p>
+          <p class="order-contact">${escapeHtml(order.customer_phone)}</p>
+          ${order.instagram_handle ? `<p class="order-contact">${escapeHtml(order.instagram_handle)}</p>` : ''}
+          <p class="order-fulfillment">${fulfillmentLabel}${order.fulfillment_type === 'delivery' && order.delivery_address ? `: ${escapeHtml(order.delivery_address)}` : ''}</p>
           <ul class="order-items">${itemsHtml}</ul>
           <select class="order-status-select" data-order-id="${order.id}">${optionsHtml}</select>
         `;
@@ -324,7 +326,7 @@
       const categories = [...new Set(hats.map(h => h.category).filter(Boolean))].sort();
 
       select.innerHTML = '<option value="">Select a category…</option>' +
-        categories.map(c => `<option value="${c}">${c}</option>`).join('') +
+        categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') +
         '<option value="__new__">+ Add new category</option>';
 
       if ([...select.options].some(o => o.value === currentValue)) {
@@ -344,9 +346,9 @@
         tr.dataset.hatId = hat.id;
 
         tr.innerHTML = `
-          <td><img src="${resolveImagePath(hat.image_url)}" alt="${hat.name}" class="hats-table-image hats-table-image--lg" /></td>
-          <td><input type="text" class="hat-field hat-field--name" data-field="name" value="${hat.name}" /></td>
-          <td>${hat.brand || ''}</td>
+          <td><img src="${escapeHtml(resolveImagePath(hat.image_url))}" alt="${escapeHtml(hat.name)}" class="hats-table-image hats-table-image--lg" /></td>
+          <td><input type="text" class="hat-field hat-field--name" data-field="name" value="${escapeHtml(hat.name)}" /></td>
+          <td>${escapeHtml(hat.brand)}</td>
           <td><input type="number" class="hat-field" data-field="price" value="${hat.price}" min="0" step="0.01" /></td>
           <td><input type="number" class="hat-field" data-field="stock_quantity" value="${hat.stock_quantity}" min="0" step="1" /></td>
           <td><input type="checkbox" class="hat-field" data-field="is_available" ${hat.is_available ? 'checked' : ''} /></td>
@@ -488,15 +490,15 @@
 
         tr.innerHTML = `
           <td class="carousel-image-cell">
-            <img src="${resolveImagePath(slide.image_url)}" alt="${slide.title}" class="hats-table-image" />
-            <input type="hidden" class="hat-field" data-field="image_url" value="${slide.image_url}" />
+            <img src="${escapeHtml(resolveImagePath(slide.image_url))}" alt="${escapeHtml(slide.title)}" class="hats-table-image" />
+            <input type="hidden" class="hat-field" data-field="image_url" value="${escapeHtml(slide.image_url)}" />
             <input type="file" class="row-image-input" accept="image/*" />
             <span class="upload-status row-upload-status"></span>
           </td>
-          <td><input type="text" class="hat-field" data-field="title" value="${slide.title}" /></td>
+          <td><input type="text" class="hat-field" data-field="title" value="${escapeHtml(slide.title)}" /></td>
           <td><input type="checkbox" class="hat-field" data-field="show_caption" ${slide.show_caption ? 'checked' : ''} /></td>
-          <td><input type="text" class="hat-field" data-field="button_text" value="${slide.button_text}" /></td>
-          <td><input type="text" class="hat-field" data-field="button_link" value="${slide.button_link}" /></td>
+          <td><input type="text" class="hat-field" data-field="button_text" value="${escapeHtml(slide.button_text)}" /></td>
+          <td><input type="text" class="hat-field" data-field="button_link" value="${escapeHtml(slide.button_link)}" /></td>
           <td><input type="number" class="hat-field" data-field="sort_order" value="${slide.sort_order}" step="1" /></td>
           <td><input type="checkbox" class="hat-field" data-field="is_active" ${slide.is_active ? 'checked' : ''} /></td>
           <td>

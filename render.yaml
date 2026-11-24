@@ -3,12 +3,16 @@ services:
     name: hat-store
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    # --proxy-headers lets the app see the visitor's real IP behind Render's
+    # load balancer (used for login / order rate limits).
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
     envVars:
+      - key: ENVIRONMENT
+        value: production
       - key: OWNER_PASSWORD
         sync: false
       - key: SESSION_SECRET_KEY
-        sync: false
+        generateValue: true
       - key: GMAIL_ADDRESS
         sync: false
       - key: GMAIL_APP_PASSWORD
