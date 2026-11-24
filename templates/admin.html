@@ -6,8 +6,8 @@
   <title>CahStopCap - Owner Dashboard</title>
   <link rel="icon" type="image/png" href="/static/logo.png" />
   <link rel="apple-touch-icon" href="/static/logo.png" />
-  <link rel="stylesheet" href="/static/styles.css?v=2" />
-  <link rel="stylesheet" href="/static/admin.css" />
+  <link rel="stylesheet" href="/static/styles.css?v=3" />
+  <link rel="stylesheet" href="/static/admin.css?v=2" />
 </head>
 <body class="index admin-body">
 
@@ -30,6 +30,9 @@
   <main class="admin-main">
     <!-- ORDERS TAB -->
     <section id="ordersTab" class="admin-tab-panel active">
+      <div class="orders-toolbar">
+        <a href="/api/admin/orders.csv" class="orders-export-link" download>Download orders (CSV)</a>
+      </div>
       <div class="orders-board" id="ordersBoard">
         <div class="orders-column" data-status="placed">
           <h3>Placed</h3>
@@ -46,6 +49,10 @@
         <div class="orders-column" data-status="completed">
           <h3>Completed</h3>
           <div class="orders-column-list" data-status-list="completed"></div>
+        </div>
+        <div class="orders-column orders-column--cancelled" data-status="cancelled">
+          <h3>Cancelled</h3>
+          <div class="orders-column-list" data-status-list="cancelled"></div>
         </div>
       </div>
     </section>
@@ -196,12 +203,13 @@
   <script src="/static/js/escape.js"></script>
 
   <script>
-    const ORDER_STATUSES = ['placed', 'processing', 'out_for_delivery', 'completed'];
+    const ORDER_STATUSES = ['placed', 'processing', 'out_for_delivery', 'completed', 'cancelled'];
     const STATUS_LABELS = {
       placed: 'Placed',
       processing: 'Processing',
       out_for_delivery: 'Out for Delivery',
-      completed: 'Completed'
+      completed: 'Completed',
+      cancelled: 'Cancelled'
     };
 
     function resolveImagePath(url) {
@@ -298,7 +306,13 @@
         `;
 
         card.querySelector('.order-status-select').addEventListener('change', (e) => {
-          updateOrderStatus(order.id, e.target.value);
+          const next = e.target.value;
+          if (next === 'cancelled' &&
+              !confirm(`Cancel order #${order.id}? The hats go back in stock and the customer is emailed.`)) {
+            e.target.value = order.status;
+            return;
+          }
+          updateOrderStatus(order.id, next);
         });
 
         list.appendChild(card);
@@ -313,10 +327,12 @@
       });
 
       if (!res.ok) {
-        alert('Could not update order status.');
+        const data = await res.json().catch(() => ({}));
+        alert(data.detail || 'Could not update order status.');
       }
 
       loadOrders();
+      loadHats(); // stock may have changed
     }
 
     // ── Hats ─────────────────────────────────────────────────────────

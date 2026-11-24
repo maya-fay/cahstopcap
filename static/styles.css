@@ -460,3 +460,24 @@ footer {
   width: 30px;
   height: 30px;
 }
+.footer-legal {
+  margin: 1.5rem 0 0;
+  font-size: 0.8rem;
+}
+
+.footer-legal a,
+.privacy-link a,
+.checkout-privacy-note a {
+  color: inherit;
+}
+
+.privacy-link {
+  font-size: 0.95rem;
+  margin-top: 2.5rem;
+}
+
+.checkout-privacy-note {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin: 0.5rem 0;
+}

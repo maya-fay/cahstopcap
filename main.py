@@ -1,3 +1,4 @@
+import csv
 import html
 import io
 import os
@@ -10,6 +11,7 @@ import base64
 import uuid
 import urllib.request
 import urllib.parse
+from datetime import datetime
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -131,12 +133,13 @@ async def readable_validation_error(request: Request, exc: RequestValidationErro
         messages.append(f"{field}: {err.get('msg')}" if field else str(err.get("msg")))
     return JSONResponse(status_code=422, content={"detail": "; ".join(messages) or "Invalid request"})
 
-ORDER_STATUSES = ["placed", "processing", "out_for_delivery", "completed"]
+ORDER_STATUSES = ["placed", "processing", "out_for_delivery", "completed", "cancelled"]
 STATUS_LABELS = {
     "placed": "Placed",
     "processing": "Processing",
     "out_for_delivery": "Out for Delivery",
     "completed": "Completed",
+    "cancelled": "Cancelled",
 }
 FULFILLMENT_TYPES = ["pickup", "delivery"]
 PAYMENT_METHODS = ["bank_transfer", "cash_on_delivery"]
@@ -536,6 +539,11 @@ def contact_page(request: Request):
     return templates.TemplateResponse("contact.html", {"request": request})
 
 
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy_page(request: Request):
+    return templates.TemplateResponse("privacy.html", {"request": request})
+
+
 class OrderItemIn(BaseModel):
     hat_id: int
     quantity: int = Field(1, ge=1, le=MAX_QUANTITY_PER_ITEM)
@@ -817,6 +825,41 @@ def admin_list_orders(
     ]
 
 
+@app.get("/api/admin/orders.csv")
+def admin_export_orders_csv(db: Session = Depends(get_db), _owner=Depends(require_owner)):
+    """Download every order as a spreadsheet — a quick backup the owner can
+    keep, and handy for bookkeeping."""
+    orders = db.execute(select(Order).order_by(Order.id)).scalars().all()
+
+    def cell(value):
+        # Stop spreadsheet apps from running customer text as a formula
+        value = "" if value is None else str(value)
+        return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
+
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow([
+        "order_id", "created_at", "status", "customer_name", "email", "phone",
+        "instagram", "fulfillment", "delivery_address", "payment_method", "items", "total",
+    ])
+    for o in orders:
+        items = "; ".join(
+            f"{i.quantity} x {i.hat.name if i.hat else 'Deleted hat'} @ {float(i.price):.2f}" for i in o.items
+        )
+        writer.writerow([cell(v) for v in (
+            o.id, o.created_at.isoformat() if o.created_at else "", o.status, o.customer_name,
+            o.customer_email, o.customer_phone, o.instagram_handle, o.fulfillment_type,
+            o.delivery_address, o.payment_method, items, f"{float(o.total_price):.2f}",
+        )])
+
+    filename = f"cahstopcap-orders-{datetime.utcnow():%Y-%m-%d}.csv"
+    return Response(
+        content=out.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 @app.patch("/api/admin/orders/{order_id}")
 def admin_update_order_status(
     order_id: int,
@@ -831,6 +874,27 @@ def admin_update_order_status(
     order = db.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    if body.status == order.status:
+        return {"id": order.id, "status": order.status}
+
+    # Cancelling puts the hats back in stock; un-cancelling takes them out again.
+    if body.status == "cancelled":
+        for item in order.items:
+            hat = db.execute(select(Hat).where(Hat.id == item.hat_id).with_for_update()).scalar_one_or_none()
+            if hat:
+                hat.stock_quantity += item.quantity
+    elif order.status == "cancelled":
+        for item in order.items:
+            hat = db.execute(select(Hat).where(Hat.id == item.hat_id).with_for_update()).scalar_one_or_none()
+            if not hat or hat.stock_quantity < item.quantity:
+                db.rollback()
+                name = hat.name if hat else f"hat #{item.hat_id}"
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Can't reopen this order: not enough '{name}' left in stock",
+                )
+            hat.stock_quantity -= item.quantity
 
     order.status = body.status
     db.commit()

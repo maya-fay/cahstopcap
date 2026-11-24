@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CahStopCap - Privacy</title>
+  <link rel="icon" type="image/png" href="/static/logo.png" />
+  <link rel="apple-touch-icon" href="/static/logo.png" />
+  <link rel="stylesheet" href="/static/styles.css?v=3" />
+  <link rel="stylesheet" href="/static/showroom.css?v=2" />
+  <link rel="stylesheet" href="/static/contact.css?v=2" />
+  <link rel="stylesheet" href="/static/privacy.css?v=1" />
+</head>
+<body class="index">
+
+  <!-- HEADER -->
+  <header>
+    <nav class="header-nav">
+      <div class="nav-item">
+        <span class="nav-text"><a href="/showroom">Shop</a></span>
+        <span class="nav-icon"><a href="/showroom" aria-label="Shop"><svg class="nav-symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18l1.5 5h-21z"/><path d="M4 9v11h16V9"/><path d="M10 20v-6h4v6"/></svg></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/#about">About</a></span>
+        <span class="nav-icon"><a href="/#about" aria-label="About"><svg class="nav-symbol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5v.5"/></svg></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/contact">Contact</a></span>
+        <span class="nav-icon"><a href="/contact" aria-label="Contact"><svg class="nav-symbol" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="M3 6l9 7 9-7"/></svg></a></span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-text"><a href="/cart" class="nav-cart-link">Cart <span class="cart-count-badge">0</span></a></span>
+        <span class="nav-icon"><a href="/cart" class="nav-cart-link" aria-label="Cart"><svg class="nav-symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h3l2.5 12h11L21 7H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg><span class="cart-count-badge">0</span></a></span>
+      </div>
+    </nav>
+    <div class="header-logo">
+      <a href="/"><img src="/static/logo.png" alt="CahStopCap Logo"></a>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <div class="marquee">
+    <span> YDYS | YOU DEFINE YOUR SWAG | YDYS </span>
+  </div>
+
+  <!-- PRIVACY SECTION -->
+  <section class="contact-page privacy-page">
+    <h2 class="showroom-header">PRIVACY</h2>
+    <p class="contact-intro">What we collect when you order, and what we do with it.</p>
+
+    <div class="privacy-text">
+      <p class="privacy-updated">Last updated: November 2026</p>
+
+      <h3>What we collect</h3>
+      <p>When you place an order we ask for your name, email, phone number and, if you want it, your Instagram handle. For delivery orders we also need your address. We keep a record of what you ordered and what it cost.</p>
+
+      <h3>Why we use it</h3>
+      <ul>
+        <li>To prepare, deliver or hand over your order.</li>
+        <li>To send you bank transfer details if you chose to pay that way.</li>
+        <li>To let you know when your order status changes.</li>
+        <li>To answer you if you contact us about an order.</li>
+      </ul>
+      <p>We don't send marketing messages from this information, and we never sell it.</p>
+
+      <h3>Who else sees it</h3>
+      <p>Only the services we need to run the shop: our website host and database, Google (Gmail) to send emails, and Twilio to send text messages if you ask for details by text. They handle it only to provide that service.</p>
+
+      <h3>Cookies and your browser</h3>
+      <p>Your cart is saved in your own browser. We use one cookie so the site remembers the order you just placed (so only you can ask for its bank details). We don't use advertising or tracking cookies.</p>
+
+      <h3>How long we keep it</h3>
+      <p>We keep order records for as long as we need them for the order, returns and our own bookkeeping, then delete them.</p>
+
+      <h3>Your choices</h3>
+      <p>You can ask us to see, correct or delete the information we hold about you. Email <a href="mailto:cahstopcap@gmail.com">cahstopcap@gmail.com</a> or DM <a href="https://www.instagram.com/cahstopcap" target="_blank" rel="noopener">@cahstopcap</a> on Instagram.</p>
+    </div>
+  </section>
+
+  <script>
+    const cart = JSON.parse(localStorage.getItem('cart') || '{}');
+    const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+    document.querySelectorAll('.cart-count-badge').forEach(el => el.textContent = count);
+  </script>
+</body>
+</html>

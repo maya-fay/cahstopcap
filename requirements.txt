@@ -1,11 +1,13 @@
+# Pinned so a deploy can't silently pick up a new, possibly breaking version.
+# To upgrade: change a version here, run the site locally, then deploy.
 fastapi==0.135.1
 starlette==0.46.2
 uvicorn==0.34.0
 jinja2==3.1.6
-python-dotenv
-sqlalchemy
-psycopg2-binary
-psycopg[binary]
-itsdangerous
-python-multipart
-Pillow
+python-dotenv==1.2.4
+sqlalchemy==2.1.9
+psycopg2-binary==2.9.13
+psycopg[binary]==3.3.9
+itsdangerous==2.2.0
+python-multipart==0.0.34
+Pillow==13.0.0

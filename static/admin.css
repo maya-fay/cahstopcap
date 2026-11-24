@@ -187,10 +187,25 @@ header.admin-header {
 /* =========================================
    ORDERS KANBAN
    ========================================= */
+.orders-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.8rem;
+}
+
+.orders-export-link {
+  font-size: 0.85rem;
+  color: rgb(119, 30, 30);
+}
+
 .orders-board {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
+}
+
+@media (max-width: 1300px) {
+  .orders-board { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 1000px) {
@@ -206,6 +221,10 @@ header.admin-header {
   border-radius: 8px;
   padding: 0.8rem;
   min-height: 200px;
+}
+
+.orders-column--cancelled {
+  background: #f1dede;
 }
 
 .orders-column h3 {
